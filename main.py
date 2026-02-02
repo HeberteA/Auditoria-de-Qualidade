@@ -73,9 +73,7 @@ st.markdown(f"""
         border-right: 1px solid rgba(227, 112, 38, 0.2);
     }}
 
-    h1, h2, h3, label, p, span {{
-        color: white ;
-    }}
+    h1, h2, h3 {{ color: #ffffff !important; font-weight: 600; letter-spacing: -0.5px; }}
     
     input {{
         background-color: rgba(255, 255, 255, 0.05) ;
@@ -110,6 +108,15 @@ if 'autenticado' not in st.session_state:
 if not st.session_state.autenticado:
     _, col_login, _ = st.columns([1, 2, 1])
     with col_login:
+        c1, c2, c3 = st.columns([1, 1, 1])
+        with c2:
+            st.image("assets/logo.png", use_container_width=True)
+        st.markdown(f"""
+        <div class="login-container">
+            <h2 style='color:#E37026; font-size: 2.7rem; margin-top: 10px; margin-bottom: 0px;'>QUALIDADE</h2>
+            <p style='color:#E37026; font-size: 1.0rem; margin-top: 0px; letter-spacing: 2px;'>Formulários de Auditori</p>
+        </div>
+        """, unsafe_allow_html=True)
         st.image("assets/logo.png", use_container_width=True)
         st.markdown("""
             <div class="sidebar-logo-container">
