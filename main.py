@@ -211,7 +211,7 @@ else:
             q16 = st.radio("O diário de obras está preenchido de forma completa (com frentes de serviço, mão de obra, e legendas nas imagens)", sim_nao, horizontal=True)
             q17 = st.radio("Há plano semanal atualizado no drive da obra?", sim_nao, horizontal=True)
             obs = st.text_area("Observações")
-            if st.form_submit_button("SALVAR", use_container_width=True):
+            if st.form_submit_button("SALVAR", use_container_width=True, type="primary"):
                 df_old = conn.read(worksheet="auditoria_canteiro", ttl=0)
                 novo_dado = pd.DataFrame([{
                     "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
@@ -246,7 +246,7 @@ else:
             st.subheader("ASSERTIVIDADE DE ESTOQUE")
             q6 = st.radio("Conferir o quantitativo descrito no relatório de 'Posição de estoque atual' com o armazenamento. Os valores estão corretos?", sim_nao, horizontal=True)
             obs = st.text_area("Observações importantes")
-            if st.form_submit_button("SALVAR", use_container_width=True):
+            if st.form_submit_button("SALVAR", use_container_width=True, type="primary"):
                 df_old = conn.read(worksheet="auditoria_estoque", ttl=0)
                 novo_dado = pd.DataFrame([{
                     "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
@@ -300,7 +300,7 @@ else:
             q27 = st.radio("O sistema de combate a incêndio foi testado e aprovado?", ["Sim", "Não", "Não aplicável"], horizontal=True)
             q28 = st.radio("Os elevadores instalados possuem documento de conformidade?", sim_nao_na, horizontal=True)
             q29 = st.radio("Os reservatórios de água estão instalados e acessíveis?", sim_nao, horizontal=True)
-            if st.form_submit_button("SALVAR", use_container_width=True, key="tip"):
+            if st.form_submit_button("SALVAR", use_container_width=True, key="tip", type="primary"):
                 df_old = conn.read(worksheet="auditoria_habitese", ttl=0)
                 novo_dado = pd.DataFrame([{
                     "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "auditor": aud, "obra": obr,
@@ -325,7 +325,7 @@ else:
             docs = ["Há PGR (Programa de Gerenciamento de Riscos) em obra?", "Há PCMSO (Programa de Controle Médico de Saúde Ocupacional) em obra?", "Há ART (Anotação de Responsabilidade Técnica) de segurança em obra?", "Há ART de execução de obra e canteiro de obra?", "Há ART e projeto de canteiro da obra (Atualizado)?", "Há ART e projeto elétrico de canteiro da obra (Atualizado)?", "Há ART e projeto de incêndio de canteiro da obra (Atualizado)?", "Há projeto de SPDA (Sistema de proteção contra descarga atmosférica) ou laudo de despensa?", "Há relatório de análise ergonômica?", "Há PCA (Programa de Proteção Auditiva)?", "Há PPR (Programa de Proteção Respiratória)?", "Há comunicação prévia de início de obra cadastrado no MTE?", "Há Mapa de risco aplicado ao canteiro?", "Há CNO (Cadastro Nacional de Obra) - Receita Federal?", "Há laudo de conformidade de instalação de Bancada de Serra?", "Há laudo de conformidade de instalação de Betoneira?", "Há laudo de conformidade de instalação de Grua?", "Há laudo de conformidade de instalação de Elevador Cremalheira?", "Há laudo de conformidade de Policorte?"]
             respostas = [st.radio(d + "", sim_nao, horizontal=True) for d in docs]
             obs = st.text_area("Observações importantes")
-            if st.form_submit_button("SALVAR", use_container_width=True):
+            if st.form_submit_button("SALVAR", use_container_width=True, type="primary"):
                 df_old = conn.read(worksheet="auditoria_seg_documental", ttl=0)
                 novo_dado = pd.DataFrame([{
                     "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "auditor": aud, "obra": obr,
@@ -358,7 +358,7 @@ else:
             q9 = st.radio("O colaborador foi treinado na NR18 (Segurança e saúde no trabalho na indústria da construção)?", sim_nao_na, horizontal=True)
             q10 = st.radio("O colaborador foi treinado na NR35 (Trabalho em altura)?", sim_nao_na, horizontal=True)
             obs = st.text_area("Observações importantes")
-            if st.form_submit_button("SALVAR", use_container_width=True):
+            if st.form_submit_button("SALVAR", use_container_width=True, type="primary"):
                 df_old = conn.read(worksheet="auditoria_seg_externo", ttl=0)
                 novo_dado = pd.DataFrame([{
                     "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "auditor": aud, "obra": obr,
@@ -391,7 +391,7 @@ else:
             q9 = st.radio("O colaborador foi treinado na NR18 (Segurança e saúde no trabalho na indústria da construção)?", sim_nao, horizontal=True)
             q10 = st.radio("O colaborador foi treinado na NR35 (Trabalho em altura)?", sim_nao_na, horizontal=True)
             obs = st.text_area("Observações importantes")
-            if st.form_submit_button("SALVAR", use_container_width=True):
+            if st.form_submit_button("SALVAR", use_container_width=True, type="primary"):
                 df_old = conn.read(worksheet="auditoria_seg_interno", ttl=0)
                 novo_dado = pd.DataFrame([{
                     "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "auditor": aud, "obra": obr,
@@ -417,7 +417,7 @@ else:
             q2 = st.radio("O colaborador foi treinado para executar o serviço através do PES (Procedimento de execução de serviço)?", sim_nao, horizontal=True)
             q3 = st.radio("Há NC (Não conformidade) para a FVS aberta?", ["Sim", "Não", "Não foi aberta a FVS", "Falta conferência do serviço"], horizontal=True)
             q4 = st.radio("Houve plano de ação para tratar a NC identificada?", ["Sim", "Não", "Não houve NC"], horizontal=True)
-            if st.form_submit_button("SALVAR", use_container_width=True):
+            if st.form_submit_button("SALVAR", use_container_width=True, type="primary"):
                 df_old = conn.read(worksheet="auditoria_qualidade", ttl=0)
                 novo_dado = pd.DataFrame([{
                     "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "auditor": aud, "obra": obr,
