@@ -221,7 +221,6 @@ else:
             q3 = st.radio("A NF foi lançada no prazo previsto em procedimento? (Até 4 dias após o recebimento do insumo)", sim_nao, horizontal=True)
             st.subheader("ARMAZENAMENTO E IDENTIFICAÇÃO")
             q4 = st.radio("O insumo está armazenado conforme TAM", sim_nao_na, horizontal=True)
-            q5 = st.radio("O insumo está identificado conforme TAM?", sim_nao_na, horizontal=True)
             st.subheader("ASSERTIVIDADE DE ESTOQUE")
             q6 = st.radio("Conferir o quantitativo descrito no relatório de 'Posição de estoque atual' com o armazenamento. Os valores estão corretos?", sim_nao, horizontal=True)
             obs = st.text_area("Observações importantes")
