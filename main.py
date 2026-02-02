@@ -161,6 +161,7 @@ else:
 
     with st.sidebar:
         st.image("assets/logo.png", use_container_width=True)
+        st.markdown("")
         st.markdown("""
             <div class="sidebar-logo-container">
                 <div class="sidebar-logo-text">QUALIDADE</div>
