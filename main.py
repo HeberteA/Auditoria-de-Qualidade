@@ -118,16 +118,22 @@ if 'autenticado' not in st.session_state:
 if not st.session_state.autenticado:
     _, col_login, _ = st.columns([1, 2, 1])
     with col_login:
+        logo_file = "logo.png" if os.path.exists("logo.png") else "Lavie.jpg"
+        img_b64 = get_base64_image(logo_file)
         
+        if img_b64:
+            mime_type = "image/png" if logo_file.endswith(".png") else "image/jpeg"
+            header_html = f'<img src="data:{mime_type};base64,{img_b64}" style="width: 650px; height: auto; display: block; margin: 0 auto 20px auto;">'
+        else:
+            header_html = "<h2 style='color:#E37026; margin-bottom: 10px;'>LAVIE</h2>"
         st.markdown(f"""
         <div class="login-container">
+             {header_html}
             <h2 style='color:#E37026; font-size: 2.7rem; margin-top: 10px; margin-bottom: 0px;'>QUALIDADE</h2>
             <p style='color:#E37026; font-size: 1.0rem; margin-top: 0px; letter-spacing: 2px;'>Formulários de Auditoria</p>
         </div>
         """, unsafe_allow_html=True)
-        c1, c2, c3 = st.columns([1, 3, 1])
-        with c2:
-            st.image("assets/logo.png", use_container_width=True)
+        
         with st.form("credenciais_acesso"):
             st.markdown("<p style='text-align: left; font-size: 14px; margin-bottom: 15px;'>Senha de Acesso</p>", unsafe_allow_html=True)
             senha_input = st.text_input("", type="password", label_visibility="collapsed")
