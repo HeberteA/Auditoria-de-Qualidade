@@ -137,8 +137,8 @@ if not st.session_state.autenticado:
         st.markdown(f"""
         <div class="login-container">
              {header_html}
-            <h2 style='color:#E37026; font-size: 4rem; margin-top: 10px; margin-bottom: 0px;'>QUALIDADE</h2>
-            <p style='color:#E37026; font-size: 2rem; margin-top: 0px; letter-spacing: 2px;'>Formulários de Auditoria</p>
+            <h2 style='color:#E37026; font-size: 2.7rem; margin-top: 10px; margin-bottom: 0px;'>QUALIDADE</h2>
+            <p style='color:#E37026; font-size: 1.5rem; margin-top: 0px; letter-spacing: 2px;'>Formulários de Auditoria</p>
         </div>
         """, unsafe_allow_html=True)
         
