@@ -118,7 +118,6 @@ if 'autenticado' not in st.session_state:
 if not st.session_state.autenticado:
     _, col_login, _ = st.columns([1, 2, 1])
     with col_login:
-        c1, c2, c3 = st.columns([1, 3, 1])
         
         st.markdown(f"""
         <div class="login-container">
@@ -126,6 +125,7 @@ if not st.session_state.autenticado:
             <p style='color:#E37026; font-size: 1.0rem; margin-top: 0px; letter-spacing: 2px;'>Formulários de Auditoria</p>
         </div>
         """, unsafe_allow_html=True)
+        c1, c2, c3 = st.columns([1, 3, 1])
         with c2:
             st.image("assets/logo.png", use_container_width=True)
         with st.form("credenciais_acesso"):
