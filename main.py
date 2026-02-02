@@ -127,12 +127,7 @@ if not st.session_state.autenticado:
             <p style='color:#E37026; font-size: 1.0rem; margin-top: 0px; letter-spacing: 2px;'>Formulários de Auditoria</p>
         </div>
         """, unsafe_allow_html=True)
-        st.markdown("""
-            <div class="sidebar-logo-container">
-                <div class="sidebar-logo-text">QUALIDADE</div>
-                <div class="sidebar-logo-sub">Formulários de Auditoria</div>
-            </div>
-        """, unsafe_allow_html=True)
+        
         with st.form("credenciais_acesso"):
             st.markdown("<p style='text-align: left; font-size: 14px; margin-bottom: 15px;'>Senha de Acesso</p>", unsafe_allow_html=True)
             senha_input = st.text_input("", type="password", label_visibility="collapsed")
