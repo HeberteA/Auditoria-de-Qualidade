@@ -225,8 +225,10 @@ else:
             q6 = st.radio("Conferir o quantitativo descrito no relatório de 'Posição de estoque atual' com o armazenamento. Os valores estão corretos?", sim_nao, horizontal=True)
             obs = st.text_area("Observações importantes")
             if st.form_submit_button("SALVAR", use_container_width=True):
-                df = pd.DataFrame([{"timestamp": datetime.now(), "auditor": aud, "obra": obr, "grupo": grupo, "insumo": especifico, "q1": q1, "q2": q2, "nf": nf_num, "q3": q3, "q4": q4, "q5": q5, "q6": q6, "obs": obs}])
-                conn.create(worksheet="auditoria_estoque", data=df)
+                df_existente = conn.read(worksheet="auditoria_estoque", ttl=0)
+                novo_dado = pd.DataFrame([{"timestamp": datetime.now().strftime("%d/%m/%Y %H:%M"), "auditor": aud, "obra": obr, "grupo": grupo, "insumo": especifico, "fvm": q1, "fvm_nc": q2, "nf": nf_num, "nf_p": q3, "arma": q4, "ident": q5, "est_ok": q6, "obs": obs}])
+                df_final = pd.concat([df_existente, novo_dado], ignore_index=True)
+                conn.update(worksheet="auditoria_estoque", data=df_final)
                 st.success("Salvo com sucesso!")
 
     elif escolha == "Habite-se":
@@ -272,8 +274,10 @@ else:
             q28 = st.radio("Os elevadores instalados possuem documento de conformidade?", sim_nao_na, horizontal=True)
             q29 = st.radio("Os reservatórios de água estão instalados e acessíveis?", sim_nao, horizontal=True)
             if st.form_submit_button("SALVAR", use_container_width=True, key="tip"):
-                df = pd.DataFrame([{"timestamp": datetime.now(), "auditor": aud, "obra": obr, "q1": q1, "q2": q2, "q3": q3, "q4": q4, "q5": q5, "q6": q6, "q7": q7, "q8": q8, "q9": q9, "q10": q10, "q11": q11, "q12": q12, "q13": q13, "q14": q14, "q15": q15, "q16": q16, "q17": q17, "q18": q18, "q19": q19, "q20": q20, "q21": q21, "q22": q22, "q23": q23, "q24": q24, "q25": q25, "q26": q26, "q27": q27, "q28": q28, "q29": q29}])
-                conn.create(worksheet="auditoria_habitese", data=df)
+                df_existente = conn.read(worksheet="auditoria_habitese", ttl=0)
+                novo_dado = pd.DataFrame([{"timestamp": datetime.now(), "auditor": aud, "obra": obr, "status": "completo"}])
+                df_final = pd.concat([df_existente, novo_dado], ignore_index=True)
+                conn.update(worksheet="auditoria_habitese", data=df_final)
                 st.success("Salvo com sucesso!")
 
     elif escolha == "Seg. Documental":
@@ -285,8 +289,9 @@ else:
             respostas = [st.radio(d + "", sim_nao, horizontal=True) for d in docs]
             obs = st.text_area("Observações importantes")
             if st.form_submit_button("SALVAR", use_container_width=True):
-                df = pd.DataFrame([{"timestamp": datetime.now(), "auditor": aud, "obra": obr, "res": str(respostas), "obs": obs}])
-                conn.create(worksheet="auditoria_seg_doc", data=df)
+                df_existente = conn.read(worksheet="auditoria_seg_documental", ttl=0)
+                df_final = pd.concat([df_existente, pd.DataFrame([{"auditor": aud, "obra": obr, "res": str(res)}])], ignore_index=True)
+                conn.update(worksheet="auditoria_seg_documental", data=df_final)
                 st.success("Salvo com sucesso!")
 
     elif escolha == "Seg. Externo":
@@ -309,8 +314,9 @@ else:
             q10 = st.radio("O colaborador foi treinado na NR35 (Trabalho em altura)?", sim_nao_na, horizontal=True)
             obs = st.text_area("Observações importantes")
             if st.form_submit_button("SALVAR", use_container_width=True):
-                df = pd.DataFrame([{"timestamp": datetime.now(), "auditor": aud, "obra": obr, "forn": forn, "colab": colab, "cargo": cargo, "q1": q1, "q2": q2, "q3": q3, "q4": q4, "q5": q5, "q6": q6, "q7": q7, "q8": q8, "q9": q9, "q10": q10, "obs": obs}])
-                conn.create(worksheet="auditoria_seg_ext", data=df)
+                df_existente = conn.read(worksheet="auditoria_seg_externo", ttl=0)
+                df_final = pd.concat([df_existente, pd.DataFrame([{"colab": colab, "forn": forn}])], ignore_index=True)
+                conn.update(worksheet="auditoria_seg_externo", data=df_final)
                 st.success("Salvo com sucesso!")
 
     elif escolha == "Seg. Interno":
@@ -334,8 +340,9 @@ else:
             q10 = st.radio("O colaborador foi treinado na NR35 (Trabalho em altura)?", sim_nao_na, horizontal=True)
             obs = st.text_area("Observações importantes")
             if st.form_submit_button("SALVAR", use_container_width=True):
-                df = pd.DataFrame([{"timestamp": datetime.now(), "auditor": aud, "obra": obr, "nome": nome, "cargo": cargo, "q1": q1, "q2": q2, "epis": epis, "q3": q3, "q4": q4, "q5": q5, "q6": q6, "q7": q7, "q8": q8, "q9": q9, "q10": q10, "obs": obs}])
-                conn.create(worksheet="auditoria_seg_int", data=df)
+                df_existente = conn.read(worksheet="auditoria_seg_interno", ttl=0)
+                df_final = pd.concat([df_existente, pd.DataFrame([{"nome": nome}])], ignore_index=True)
+                conn.update(worksheet="auditoria_seg_interno", data=df_final)
                 st.success("Salvo com sucesso!")
 
     elif escolha == "Qualidade":
@@ -352,7 +359,8 @@ else:
             q3 = st.radio("Há NC (Não conformidade) para a FVS aberta?", ["Sim", "Não", "Não foi aberta a FVS", "Falta conferência do serviço"], horizontal=True)
             q4 = st.radio("Houve plano de ação para tratar a NC identificada?", ["Sim", "Não", "Não houve NC"], horizontal=True)
             if st.form_submit_button("SALVAR", use_container_width=True):
-                df = pd.DataFrame([{"timestamp": datetime.now(), "auditor": aud, "obra": obr, "nome": nome, "cargo": cargo, "ativ": ativ, "fvs": q1, "local": local, "pes": q2, "nc": q3, "plano": q4}])
-                conn.create(worksheet="auditoria_qualidade", data=df)
+                df_existente = conn.read(worksheet="auditoria_qualidade", ttl=0)
+                df_final = pd.concat([df_existente, pd.DataFrame([{"nome": nome, "fvs": q1, "nc": q3}])], ignore_index=True)
+                conn.update(worksheet="auditoria_qualidade", data=df_final)
                 st.success("Salvo com sucesso!")
 
