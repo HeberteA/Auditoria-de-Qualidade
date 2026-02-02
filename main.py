@@ -173,7 +173,7 @@ else:
         escolha = option_menu(
             "Formulários",
             ["Canteiro", "Estoque", "Habite-se", "Seg. Documental", "Seg. Externo", "Seg. Interno", "Qualidade"],
-            icons=["building", "box", "clipboard-check", "file-earmark-lock", "person-up", "person-gear", "star"],
+            icons=["building", "box", "clipboard-check", "file-earmark-lock", "person-up", "person-gear", "patch-check"],
             styles={
                 "container": {"padding": "0!important", "background": "transparent"},
                 "nav-link": {"color": "#aaa", "font-size": "0.9rem", "margin":"6px", "text-align": "left"},
