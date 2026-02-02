@@ -124,7 +124,7 @@ if 'autenticado' not in st.session_state:
     st.session_state.autenticado = False
 
 if not st.session_state.autenticado:
-    _, col_login, _ = st.columns([1, 2, 1])
+    _, col_login, _ = st.columns([1, 1, 1])
     with col_login:
         logo_file = "assets/logo.png" if os.path.exists("assets/logo.png") else "assets/logo.jpg"
         img_b64 = get_base64_image(logo_file)
