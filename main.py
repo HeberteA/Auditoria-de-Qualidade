@@ -187,7 +187,7 @@ else:
         )
 
     if escolha == "Canteiro":
-        st.header("CANTEIRO E ESCRITÓRIO DE OBRAS")
+        st.header("CANTEIRO E ESCRITÓRIO DE OBRAS", divider="orange")
         with st.form("form_canteiro"):
             aud = st.selectbox("Auditor interno responsável", auditores)
             obr = st.selectbox("Obra auditada", obras)
@@ -228,7 +228,7 @@ else:
                 st.success("Salvo com sucesso!")
 
     elif escolha == "Estoque":
-        st.header("ESTOQUE")
+        st.header("ESTOQUE", divider="orange")
         with st.form("form_estoque"):
             aud = st.selectbox("Auditor interno responsável", auditores)
             obr = st.selectbox("Obra auditada", obras)
@@ -259,7 +259,7 @@ else:
                 st.success("Salvo com sucesso!")
 
     elif escolha == "Habite-se":
-        st.header("HABITE-SE")
+        st.header("HABITE-SE", divider="orange")
         with st.form("form_habite"):
             aud = st.selectbox("Auditor interno responsável", auditores)
             obr = st.selectbox("Obra auditada", obras)
@@ -318,7 +318,7 @@ else:
                 st.success("Salvo com sucesso!")
 
     elif escolha == "Seg. Documental":
-        st.header("SEGURANÇA DO TRABALHO - DOCUMENTAL")
+        st.header("SEGURANÇA DO TRABALHO - DOCUMENTAL", divider="orange")
         with st.form("form_seg_doc"):
             aud = st.selectbox("Auditor interno responsável", auditores)
             obr = st.selectbox("Obra auditada", obras)
@@ -340,7 +340,7 @@ else:
                 st.success("Salvo com sucesso!")
 
     elif escolha == "Seg. Externo":
-        st.header("SEGURANÇA DO TRABALHO - COLABORADOR EXTERNO")
+        st.header("SEGURANÇA DO TRABALHO - COLABORADOR EXTERNO", divider="orange")
         with st.form("form_seg_ext"):
             aud = st.selectbox("Auditor interno responsável", auditores)
             obr = st.selectbox("Obra auditada", obras)
@@ -372,7 +372,7 @@ else:
                 st.success("Salvo com sucesso!")
 
     elif escolha == "Seg. Interno":
-        st.header("SEGURANÇA DO TRABALHO - COLABORADOR INTERNO")
+        st.header("SEGURANÇA DO TRABALHO - COLABORADOR INTERNO", divider="orange")
         with st.form("form_seg_int"):
             aud = st.selectbox("Auditor interno responsável", auditores)
             obr = st.selectbox("Obra auditada", obras)
@@ -405,7 +405,7 @@ else:
                 st.success("Salvo com sucesso!")
 
     elif escolha == "Qualidade":
-        st.header("SETOR DE QUALIDADE")
+        st.header("SETOR DE QUALIDADE", divider="orange")
         with st.form("form_qual"):
             aud = st.selectbox("Auditor interno responsável", auditores)
             obr = st.selectbox("Obra auditada", obras)
