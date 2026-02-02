@@ -3,12 +3,19 @@ from streamlit_option_menu import option_menu
 from streamlit_gsheets import GSheetsConnection
 import pandas as pd
 from datetime import datetime
+import base64
 
 st.set_page_config(
     page_title="Auditoria de Qualidade",
     page_icon="assets/icon.png",
     layout="wide"
 )
+
+def get_base64_image(image_path):
+    if not os.path.exists(image_path):
+        return None
+    with open(image_path, "rb") as img_file:
+        return base64.b64encode(img_file.read()).decode()
 
 st.markdown(f"""
     <style>
@@ -118,7 +125,7 @@ if 'autenticado' not in st.session_state:
 if not st.session_state.autenticado:
     _, col_login, _ = st.columns([1, 2, 1])
     with col_login:
-        logo_file = "logo.png" if os.path.exists("logo.png") else "Lavie.jpg"
+        logo_file = "assets/logo.png" if os.path.exists("assets/logo.png") else "assets/logo.jpg"
         img_b64 = get_base64_image(logo_file)
         
         if img_b64:
