@@ -160,6 +160,7 @@ else:
     sim_nao_na = ["Sim", "Não", "Não se aplica"]
 
     with st.sidebar:
+        st.markdown("")
         st.image("assets/logo.png", use_container_width=True)
         st.markdown("")
         st.markdown("""
@@ -168,6 +169,7 @@ else:
                 <div class="sidebar-logo-sub">Formulários de Auditoria</div>
             </div>
         """, unsafe_allow_html=True)
+        st.markdown("")
         escolha = option_menu(
             "Formulários",
             ["Canteiro", "Estoque", "Habite-se", "Seg. Documental", "Seg. Externo", "Seg. Interno", "Qualidade"],
