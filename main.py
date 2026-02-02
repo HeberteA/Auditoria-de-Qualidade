@@ -201,9 +201,18 @@ else:
             q17 = st.radio("Há plano semanal atualizado no drive da obra?", sim_nao, horizontal=True)
             obs = st.text_area("Observações")
             if st.form_submit_button("SALVAR", use_container_width=True):
-                df_existente = conn.read(worksheet="auditoria_canteiro", ttl=0)
-                novo_dado = pd.DataFrame([{"timestamp": datetime.now().strftime("%d/%m/%Y %H:%M"), "auditor": aud, "obra": obr, "q1": q1, "q2": q2, "q3": q3, "q4": q4, "q5": q5, "q6": q6, "q7": q7, "q8": q8, "q9": q9, "q10": q10, "q11": q11, "q12": q12, "q13": q13, "q14": q14, "q15": q15, "q16": q16, "q17": q17, "obs": obs}])
-                df_final = pd.concat([df_existente, novo_dado], ignore_index=True)
+                df_old = conn.read(worksheet="auditoria_canteiro", ttl=0)
+                novo_dado = pd.DataFrame([{
+                    "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+                    "auditor": aud, "obra": obr, "epi_visitantes": q1, "kit_primeiros_socorros": q2,
+                    "sinalizacao_advertencia": q3, "placas_orientacao": q4, "areas_vivencia_limpeza": q5,
+                    "canteiro_limpeza": q6, "escadas_seguras": q7, "barreiras_guarda_corpo": q8,
+                    "protecao_queda_objetos": q9, "maquinas_equipamentos": q10, "instalacoes_provisorias": q11,
+                    "extintores_norma": q12, "escritorio_monitoramento": q13, "painel_gestao": q14,
+                    "diario_obra_atualizado": q15, "diario_obra_completo": q16, "plano_semanal_drive": q17,
+                    "observacoes": obs
+                }])
+                df_final = pd.concat([df_old, novo_dado], ignore_index=True)
                 conn.update(worksheet="auditoria_canteiro", data=df_final)
                 st.success("Salvo com sucesso!")
 
@@ -227,9 +236,14 @@ else:
             q6 = st.radio("Conferir o quantitativo descrito no relatório de 'Posição de estoque atual' com o armazenamento. Os valores estão corretos?", sim_nao, horizontal=True)
             obs = st.text_area("Observações importantes")
             if st.form_submit_button("SALVAR", use_container_width=True):
-                df_existente = conn.read(worksheet="auditoria_estoque", ttl=0)
-                novo_dado = pd.DataFrame([{"timestamp": datetime.now().strftime("%d/%m/%Y %H:%M"), "auditor": aud, "obra": obr, "grupo": grupo, "insumo": especifico, "fvm": q1, "fvm_nc": q2, "nf": nf_num, "nf_p": q3, "arma": q4, "ident": q5, "est_ok": q6, "obs": obs}])
-                df_final = pd.concat([df_existente, novo_dado], ignore_index=True)
+                df_old = conn.read(worksheet="auditoria_estoque", ttl=0)
+                novo_dado = pd.DataFrame([{
+                    "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+                    "auditor": aud, "obra": obr, "grupo_insumo": grupo, "insumo_especifico": especifico,
+                    "fvm_preenchida": q1, "nc_fvm_prazo": q2, "nf_numero": nf_num, "nf_prazo_lancamento": q3,
+                    "armazenamento_tam": q4, "identificacao_tam": q5, "assertividade_estoque": q6, "observacoes": obs
+                }])
+                df_final = pd.concat([df_old, novo_dado], ignore_index=True)
                 conn.update(worksheet="auditoria_estoque", data=df_final)
                 st.success("Salvo com sucesso!")
 
@@ -276,9 +290,19 @@ else:
             q28 = st.radio("Os elevadores instalados possuem documento de conformidade?", sim_nao_na, horizontal=True)
             q29 = st.radio("Os reservatórios de água estão instalados e acessíveis?", sim_nao, horizontal=True)
             if st.form_submit_button("SALVAR", use_container_width=True, key="tip"):
-                df_existente = conn.read(worksheet="auditoria_habitese", ttl=0)
-                novo_dado = pd.DataFrame([{"timestamp": datetime.now(), "auditor": aud, "obra": obr, "status": "completo"}])
-                df_final = pd.concat([df_existente, novo_dado], ignore_index=True)
+                df_old = conn.read(worksheet="auditoria_habitese", ttl=0)
+                novo_dado = pd.DataFrame([{
+                    "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "auditor": aud, "obra": obr,
+                    "placa_obra": q1, "projetos_disponiveis": q2, "arts_rrts_vigentes": q3, "afastamentos_projeto": q4,
+                    "altura_projeto": q5, "aumento_area_nao_aprovado": q6, "taxas_ocupacao_permeabilidade": q7,
+                    "estrutura_finalizada": q8, "revestimentos_acabados": q9, "itens_seguranca_instalados": q10,
+                    "acessibilidade_executada": q11, "energia_definitiva": q12, "agua_esgoto": q13, "drenagens_executadas": q14,
+                    "instalacoes_gas": q15, "rotas_fuga": q16, "extintores_projeto": q17, "extintores_validade": q18,
+                    "sinalizacao_emergencia": q19, "calcada_projeto": q20, "vagas_garagem": q21, "acesso_imovel": q22,
+                    "paisagismo": q23, "acumulo_residuos": q24, "destinacao_residuos": q25, "ligacoes_irregulares": q26,
+                    "combate_incendio_testado": q27, "elevadores_conformidade": q28, "reservatorios_agua": q29
+                }])
+                df_final = pd.concat([df_old, novo_dado], ignore_index=True)
                 conn.update(worksheet="auditoria_habitese", data=df_final)
                 st.success("Salvo com sucesso!")
 
@@ -291,8 +315,16 @@ else:
             respostas = [st.radio(d + "", sim_nao, horizontal=True) for d in docs]
             obs = st.text_area("Observações importantes")
             if st.form_submit_button("SALVAR", use_container_width=True):
-                df_existente = conn.read(worksheet="auditoria_seg_documental", ttl=0)
-                df_final = pd.concat([df_existente, pd.DataFrame([{"auditor": aud, "obra": obr, "res": str(res)}])], ignore_index=True)
+                df_old = conn.read(worksheet="auditoria_seg_documental", ttl=0)
+                novo_dado = pd.DataFrame([{
+                    "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "auditor": aud, "obra": obr,
+                    "pgr": pgr, "pcmso": pcmso, "art_seguranca": art_seg, "art_execucao_canteiro": art_exc,
+                    "art_projeto_canteiro": art_cant, "art_projeto_eletrico": art_ele, "art_projeto_incendio": art_inc,
+                    "projeto_spda": spda, "analise_ergonomica": erg, "pca": pca, "ppr": ppr, "comunicacao_mte": mte,
+                    "mapa_risco": mapa, "cno": cno, "laudo_serra": serra, "laudo_betoneira": bet, "laudo_grua": grua,
+                    "laudo_cremalheira": crem, "laudo_policorte": poli, "observacoes": obs
+                }])
+                df_final = pd.concat([df_old, novo_dado], ignore_index=True)
                 conn.update(worksheet="auditoria_seg_documental", data=df_final)
                 st.success("Salvo com sucesso!")
 
@@ -316,9 +348,16 @@ else:
             q10 = st.radio("O colaborador foi treinado na NR35 (Trabalho em altura)?", sim_nao_na, horizontal=True)
             obs = st.text_area("Observações importantes")
             if st.form_submit_button("SALVAR", use_container_width=True):
-                df_existente = conn.read(worksheet="auditoria_seg_externo", ttl=0)
-                df_final = pd.concat([df_existente, pd.DataFrame([{"colab": colab, "forn": forn}])], ignore_index=True)
-                conn.update(worksheet="auditoria_seg_externo", data=df_final)
+                df_old = conn.read(worksheet="auditoria_seg_externo", ttl=0)
+                novo_dado = pd.DataFrame([{
+                    "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "auditor": aud, "obra": obr,
+                    "fornecedor": forn, "colaborador_nome": colab, "cargo": cargo, "pcmso_valido": q1,
+                    "art_servico": q2, "ficha_epi": q3, "uso_epi_adequado": q4, "aso_validade": q5,
+                    "os_assinada": q6, "treino_nr06": q7, "treino_nr12": q8, "treino_nr18": q9,
+                    "treino_nr35": q10, "observacoes": obs
+                }])
+                df_final = pd.concat([df_old, novo_dado], ignore_index=True)
+                conn.update(worksheet="auditoria_seg_externo", data=df_final
                 st.success("Salvo com sucesso!")
 
     elif escolha == "Seg. Interno":
@@ -342,8 +381,15 @@ else:
             q10 = st.radio("O colaborador foi treinado na NR35 (Trabalho em altura)?", sim_nao_na, horizontal=True)
             obs = st.text_area("Observações importantes")
             if st.form_submit_button("SALVAR", use_container_width=True):
-                df_existente = conn.read(worksheet="auditoria_seg_interno", ttl=0)
-                df_final = pd.concat([df_existente, pd.DataFrame([{"nome": nome}])], ignore_index=True)
+                df_old = conn.read(worksheet="auditoria_seg_interno", ttl=0)
+                novo_dado = pd.DataFrame([{
+                    "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "auditor": aud, "obra": obr,
+                    "colaborador_nome": nome, "cargo": cargo, "uso_epi_adequado": q1, "url_imagem_epi": "",
+                    "ficha_epi_pgr": q2, "quais_epis_uso": epis, "ponto_batido": q3, "aso_validade": q4,
+                    "cesta_basica": q5, "os_assinada": q6, "treino_nr06": q7, "treino_nr12": q8,
+                    "treino_nr18": q9, "treino_nr35": q10, "observacoes": obs
+                }])
+                df_final = pd.concat([df_old, novo_dado], ignore_index=True)
                 conn.update(worksheet="auditoria_seg_interno", data=df_final)
                 st.success("Salvo com sucesso!")
 
@@ -361,8 +407,13 @@ else:
             q3 = st.radio("Há NC (Não conformidade) para a FVS aberta?", ["Sim", "Não", "Não foi aberta a FVS", "Falta conferência do serviço"], horizontal=True)
             q4 = st.radio("Houve plano de ação para tratar a NC identificada?", ["Sim", "Não", "Não houve NC"], horizontal=True)
             if st.form_submit_button("SALVAR", use_container_width=True):
-                df_existente = conn.read(worksheet="auditoria_qualidade", ttl=0)
-                df_final = pd.concat([df_existente, pd.DataFrame([{"nome": nome, "fvs": q1, "nc": q3}])], ignore_index=True)
+                df_old = conn.read(worksheet="auditoria_qualidade", ttl=0)
+                novo_dado = pd.DataFrame([{
+                    "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "auditor": aud, "obra": obr,
+                    "colaborador_nome": nome, "cargo": cargo, "atividade_momento": ativ, "fvs_aberta": fvs,
+                    "local_servico": loc, "treino_pes": pes, "nc_fvs": nc, "plano_acao_nc": plano
+                }])
+                df_final = pd.concat([df_old, novo_dado], ignore_index=True)
                 conn.update(worksheet="auditoria_qualidade", data=df_final)
                 st.success("Salvo com sucesso!")
 
