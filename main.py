@@ -201,8 +201,10 @@ else:
             q17 = st.radio("Há plano semanal atualizado no drive da obra?", sim_nao, horizontal=True)
             obs = st.text_area("Observações")
             if st.form_submit_button("SALVAR", use_container_width=True):
-                df = pd.DataFrame([{"timestamp": datetime.now(), "auditor": aud, "obra": obr, "q1": q1, "q2": q2, "q3": q3, "q4": q4, "q5": q5, "q6": q6, "q7": q7, "q8": q8, "q9": q9, "q10": q10, "q11": q11, "q12": q12, "q13": q13, "q14": q14, "q15": q15, "q16": q16, "q17": q17, "obs": obs}])
-                conn.create(worksheet="auditoria_canteiro", data=df)
+                df_existente = conn.read(worksheet="auditoria_canteiro", ttl=0)
+                novo_dado = pd.DataFrame([{"timestamp": datetime.now().strftime("%d/%m/%Y %H:%M"), "auditor": aud, "obra": obr, "q1": q1, "q2": q2, "q3": q3, "q4": q4, "q5": q5, "q6": q6, "q7": q7, "q8": q8, "q9": q9, "q10": q10, "q11": q11, "q12": q12, "q13": q13, "q14": q14, "q15": q15, "q16": q16, "q17": q17, "obs": obs}])
+                df_final = pd.concat([df_existente, novo_dado], ignore_index=True)
+                conn.update(worksheet="auditoria_canteiro", data=df_final)
                 st.success("Salvo com sucesso!")
 
     elif escolha == "Estoque":
