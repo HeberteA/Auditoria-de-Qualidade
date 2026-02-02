@@ -357,7 +357,7 @@ else:
                     "treino_nr35": q10, "observacoes": obs
                 }])
                 df_final = pd.concat([df_old, novo_dado], ignore_index=True)
-                conn.update(worksheet="auditoria_seg_externo", data=df_final
+                conn.update(worksheet="auditoria_seg_externo", data=df_final)
                 st.success("Salvo com sucesso!")
 
     elif escolha == "Seg. Interno":
