@@ -172,7 +172,16 @@ else:
             None,
             ["Canteiro", "Estoque", "Habite-se", "Seg. Documental", "Seg. Externo", "Seg. Interno", "Qualidade"],
             icons=["building", "box", "clipboard-check", "file-earmark-lock", "person-up", "person-gear", "star"],
-            styles={"nav-link-selected": {"background-color": "#E37026"}}
+            styles={
+                "container": {"padding": "0!important", "background": "transparent"},
+                "nav-link": {"color": "#aaa", "font-size": "0.9rem", "margin":"6px", "text-align": "left"},
+                "nav-link-selected": {
+                    "background-color": "rgba(227, 112, 38, 0.15)", 
+                    "color": "#E37026", 
+                    "border-left": "3px solid #E37026"
+                },
+                "icon": {"font-size": "1.1rem"}
+            }
         )
 
     if escolha == "Canteiro":
