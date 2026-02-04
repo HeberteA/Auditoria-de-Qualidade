@@ -519,7 +519,7 @@ else:
                     "--hover-color": "#eee",
                     "color": "#333"
                 },
-                "nav-link-selected": {"background-color": "#E37026", "color": "white"},
+                "nav-link-selected": {"background-color": "#E37026", "color": "rgba(227, 112, 38, 0.3)"},
             }
         )
     
