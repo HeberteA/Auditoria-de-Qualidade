@@ -517,7 +517,7 @@ else:
                     "text-align": "center", 
                     "margin": "0px", 
                     "--hover-color": "rgba(227, 112, 38, 0.3)",
-                    "color": "#333"
+                    "color": "ffffff"
                 },
                 "nav-link-selected": {"background-color": "#E37026", "color": "white"},
             }
