@@ -526,7 +526,7 @@ else:
                     st.markdown(f"""
                     <div style="background: rgba(255,255,255,0.03); padding: 25px; border-radius: 15px; border: 1px solid rgba(227, 112, 38, 0.3); border-left: 8px solid #E37026; margin-bottom: 20px; line-height: 1.6;">
                         <div style="color:#E37026; font-size: 1.2rem; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid rgba(227, 112, 38, 0.2); padding-bottom: 10px;">
-                            REGISTRO #{index + 1} - {row.get('obra', 'OBRA NÃO IDENTIFICADA')}
+                            REGISTRO {index + 1} - {row.get('obra', 'OBRA NÃO IDENTIFICADA')}
                         </div>
                         <div style="font-size: 0.85rem; color: #e0e0e0;">
                             {conteudo_card}
