@@ -252,7 +252,7 @@ else:
                     "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
                     "auditor": aud, "obra": obr, "grupo_insumo": grupo, "insumo_especifico": especifico,
                     "fvm_preenchida": q1, "nc_fvm_prazo": q2, "nf_numero": nf_num, "nf_prazo_lancamento": q3,
-                    "armazenamento_tam": q4, "identificacao_tam": q5, "assertividade_estoque": q6, "observacoes": obs
+                    "armazenamento_tam": q4, "identificacao_tam": q6, "observacoes": obs
                 }])
                 df_final = pd.concat([df_old, novo_dado], ignore_index=True)
                 conn.update(worksheet="auditoria_estoque", data=df_final)
