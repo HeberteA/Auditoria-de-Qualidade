@@ -348,7 +348,7 @@ else:
         
             obs_doc = st.text_area("Observações importantes")
 
-            if st.form_submit_button("SALVAR SEGURANÇA DOCUMENTAL", use_container_width=True, type="primary"):
+            if st.form_submit_button("SALVAR", use_container_width=True, type="primary"):
                 df_old = conn.read(worksheet="auditoria_seg_documental", ttl=0)
             
                 novo_registro = pd.DataFrame([{
