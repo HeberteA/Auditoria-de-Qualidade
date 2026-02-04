@@ -511,25 +511,26 @@ else:
         )
     
         if df_acompanhamento.empty:
-            st.info("Nenhum dado encontrado para os filtros selecionados")
+            st.info("Nenhum dado encontrado")
         elif modo_visao == "Tabela":
             st.dataframe(df_acompanhamento, use_container_width=True)
         else:
-            cols = st.columns(3)
             for index, row in df_acompanhamento.reset_index().iterrows():
-                with cols[index % 3]:
-                    obs = row.get('observacoes', 'Sem observações')
-                    if pd.isna(obs): obs = "Sem observações"
-                    
+                with st.container():
+                    conteudo_card = ""
+                    for col in df_acompanhamento.columns:
+                        val = row[col]
+                        if pd.isna(val): val = "-"
+                        conteudo_card += f"<div style='margin-bottom: 4px;'><b>{col.replace('_', ' ').title()}:</b> {val}</div>"
+    
                     st.markdown(f"""
-                    <div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 15px; border: 1px solid rgba(227, 112, 38, 0.2); border-left: 6px solid #E37026; margin-bottom: 20px;">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                            <h4 style="margin:0; color:#E37026; font-size: 1.1rem;">{row['obra']}</h4>
-                            <span style="font-size: 0.7rem; color: #888;">{row['timestamp']}</span>
+                    <div style="background: rgba(255,255,255,0.03); padding: 25px; border-radius: 15px; border: 1px solid rgba(227, 112, 38, 0.3); border-left: 8px solid #E37026; margin-bottom: 20px; line-height: 1.6;">
+                        <div style="color:#E37026; font-size: 1.2rem; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid rgba(227, 112, 38, 0.2); padding-bottom: 10px;">
+                            REGISTRO #{index + 1} - {row.get('obra', 'OBRA NÃO IDENTIFICADA')}
                         </div>
-                        <p style="font-size: 0.9rem; margin-top: 10px;"><b>Auditor:</b> {row['auditor']}</p>
-                        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 10px 0;">
-                        <p style="font-size: 0.8rem; color: #bbb;">{obs}</p>
+                        <div style="font-size: 0.85rem; color: #e0e0e0;">
+                            {conteudo_card}
+                        </div>
                     </div>
                     """, unsafe_allow_html=True)
     
@@ -612,7 +613,7 @@ else:
             col_d1, col_d2 = st.columns(2)
             
             with col_d1:
-                st.write(f"Conformidade por Unidade/Obra")
+                st.write("Conformidade por Unidade/Obra")
                 conf_obra = []
                 for ob in df_setor['obra'].unique():
                     val = calc_score(df_setor[df_setor['obra'] == ob])
@@ -623,7 +624,7 @@ else:
                 st.plotly_chart(fig_ob, use_container_width=True)
                 
             with col_d2:
-                st.write(f"Análise de Itens Críticos (Não Conformidades)")
+                st.write("Análise de Itens Críticos")
                 cols_meta = ['timestamp', 'auditor', 'obra', 'observacoes', 'fornecedor', 'colaborador_nome', 'cargo', 'atividade_momento', 'local_servico', 'url_imagem_epi', 'quais_epis_uso', 'insumo_especifico', 'nf_numero', 'grupo_insumo']
                 qs = [c for c in df_setor.columns if c not in cols_meta]
                 
