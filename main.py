@@ -318,26 +318,68 @@ else:
                 st.success("Salvo com sucesso!")
 
     elif escolha == "Seg. Documental":
-        st.header("SEGURANÇA DO TRABALHO - DOCUMENTAL", divider="orange")
+        st.header("4. SEGURANÇA DO TRABALHO - DOCUMENTAL", divider="orange")
         with st.form("form_seg_doc"):
-            aud = st.selectbox("Auditor interno responsável", auditores)
-            obr = st.selectbox("Obra auditada", obras)
-            docs = ["Há PGR (Programa de Gerenciamento de Riscos) em obra?", "Há PCMSO (Programa de Controle Médico de Saúde Ocupacional) em obra?", "Há ART (Anotação de Responsabilidade Técnica) de segurança em obra?", "Há ART de execução de obra e canteiro de obra?", "Há ART e projeto de canteiro da obra (Atualizado)?", "Há ART e projeto elétrico de canteiro da obra (Atualizado)?", "Há ART e projeto de incêndio de canteiro da obra (Atualizado)?", "Há projeto de SPDA (Sistema de proteção contra descarga atmosférica) ou laudo de despensa?", "Há relatório de análise ergonômica?", "Há PCA (Programa de Proteção Auditiva)?", "Há PPR (Programa de Proteção Respiratória)?", "Há comunicação prévia de início de obra cadastrado no MTE?", "Há Mapa de risco aplicado ao canteiro?", "Há CNO (Cadastro Nacional de Obra) - Receita Federal?", "Há laudo de conformidade de instalação de Bancada de Serra?", "Há laudo de conformidade de instalação de Betoneira?", "Há laudo de conformidade de instalação de Grua?", "Há laudo de conformidade de instalação de Elevador Cremalheira?", "Há laudo de conformidade de Policorte?"]
-            respostas = [st.radio(d + "", sim_nao, horizontal=True) for d in docs]
-            obs = st.text_area("Observações importantes")
-            if st.form_submit_button("SALVAR", use_container_width=True, type="primary"):
+            aud = st.selectbox("Auditor interno responsável *", auditores)
+            obr = st.selectbox("Obra auditada *", obras)
+
+            st.subheader("Documentação Técnica e Programas")
+            pgr = st.radio("Há PGR (Programa de Gerenciamento de Riscos) em obra? (Solicitar evidência) *", sim_nao, horizontal=True)
+            pcmso = st.radio("Há PCMSO (Programa de Controle Médico de Saúde Ocupacional) em obra? (Solicitar evidência) *", sim_nao, horizontal=True)
+            art_seg = st.radio("Há ART (Anotação de Responsabilidade Técnica) de segurança em obra? (Solicitar evidência) *", sim_nao, horizontal=True)
+            art_exc = st.radio("Há ART de execução de obra e canteiro de obra? (Solicitar evidência) *", sim_nao, horizontal=True)
+            art_cant = st.radio("Há ART e projeto de canteiro da obra (Atualizado)? (Solicitar evidência) *", sim_nao, horizontal=True)
+            art_ele = st.radio("Há ART e projeto elétrico de canteiro da obra (Atualizado)? (Solicitar evidência) *", sim_nao, horizontal=True)
+            art_inc = st.radio("Há ART e projeto de incêndio de canteiro da obra (Atualizado)? (Solicitar evidência) *", sim_nao, horizontal=True)
+            spda = st.radio("Há projeto de SPDA (Sistema de proteção contra descarga atmosférica) ou laudo de despensa? (Solicitar evidência) *", sim_nao, horizontal=True)
+            ergonomia = st.radio("Há relatório de análise ergonômica? (Solicitar evidência) *", sim_nao, horizontal=True)
+            pca = st.radio("Há PCA (Programa de Proteção Auditiva)? (Solicitar evidência) *", sim_nao, horizontal=True)
+            ppr = st.radio("Há PPR (Programa de Proteção Respiratória)? (Solicitar evidência) *", sim_nao, horizontal=True)
+            mte = st.radio("Há comunicação prévia de início de obra cadastrado no MTE? (Solicitar evidência) *", sim_nao, horizontal=True)
+            mapa_risco = st.radio("Há Mapa de risco aplicado ao canteiro? (Solicitar evidência) *", sim_nao, horizontal=True)
+            cno = st.radio("Há CNO (Cadastro Nacional de Obra) - Receita Federal? (Solicitar evidência) *", sim_nao, horizontal=True)
+        
+            st.subheader("Laudos de Máquinas e Equipamentos")
+            serra = st.radio("Há laudo de conformidade de instalação de Bancada de Serra? (Solicitar evidência) *", sim_nao, horizontal=True)
+            betoneira = st.radio("Há laudo de conformidade de instalação de Betoneira? (Solicitar evidência) *", sim_nao, horizontal=True)
+            grua = st.radio("Há laudo de conformidade de instalação de Grua? (Solicitar evidência) *", sim_nao, horizontal=True)
+            cremalheira = st.radio("Há laudo de conformidade de instalação de Elevador Cremalheira? (Solicitar evidência) *", sim_nao, horizontal=True)
+            policorte = st.radio("Há laudo de conformidade de Policorte? (Solicitar evidência) *", sim_nao, horizontal=True)
+        
+            obs_doc = st.text_area("Observações importantes")
+
+            if st.form_submit_button("SALVAR SEGURANÇA DOCUMENTAL", use_container_width=True, type="primary"):
                 df_old = conn.read(worksheet="auditoria_seg_documental", ttl=0)
-                novo_dado = pd.DataFrame([{
-                    "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "auditor": aud, "obra": obr,
-                    "pgr": pgr, "pcmso": pcmso, "art_seguranca": art_seg, "art_execucao_canteiro": art_exc,
-                    "art_projeto_canteiro": art_cant, "art_projeto_eletrico": art_ele, "art_projeto_incendio": art_inc,
-                    "projeto_spda": spda, "analise_ergonomica": erg, "pca": pca, "ppr": ppr, "comunicacao_mte": mte,
-                    "mapa_risco": mapa, "cno": cno, "laudo_serra": serra, "laudo_betoneira": bet, "laudo_grua": grua,
-                    "laudo_cremalheira": crem, "laudo_policorte": poli, "observacoes": obs
+            
+                novo_registro = pd.DataFrame([{
+                    "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+                    "auditor": aud,
+                    "obra": obr,
+                    "pgr": pgr,
+                    "pcmso": pcmso,
+                    "art_seguranca": art_seg,
+                    "art_execucao_canteiro": art_exc,
+                    "art_projeto_canteiro": art_cant,
+                    "art_projeto_eletrico": art_ele,
+                    "art_projeto_incendio": art_inc,
+                    "projeto_spda": spda,
+                    "analise_ergonomica": ergonomia,
+                    "pca": pca,
+                    "ppr": ppr,
+                    "comunicacao_mte": mte,
+                    "mapa_risco": mapa_risco,
+                    "cno": cno,
+                    "laudo_serra": serra,
+                    "laudo_betoneira": betoneira,
+                    "laudo_grua": grua,
+                    "laudo_cremalheira": cremalheira,
+                    "laudo_policorte": policorte,
+                    "observacoes": obs_doc
                 }])
-                df_final = pd.concat([df_old, novo_dado], ignore_index=True)
+            
+                df_final = pd.concat([df_old, novo_registro], ignore_index=True)
                 conn.update(worksheet="auditoria_seg_documental", data=df_final)
-                st.success("Salvo com sucesso!")
+                st.success("Auditoria documental salva com sucesso!")
 
     elif escolha == "Seg. Externo":
         st.header("SEGURANÇA DO TRABALHO - COLABORADOR EXTERNO", divider="orange")
@@ -421,8 +463,8 @@ else:
                 df_old = conn.read(worksheet="auditoria_qualidade", ttl=0)
                 novo_dado = pd.DataFrame([{
                     "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "auditor": aud, "obra": obr,
-                    "colaborador_nome": nome, "cargo": cargo, "atividade_momento": ativ, "fvs_aberta": fvs,
-                    "local_servico": loc, "treino_pes": pes, "nc_fvs": nc, "plano_acao_nc": plano
+                    "colaborador_nome": nome, "cargo": cargo, "atividade_momento": ativ, "fvs_aberta": q1,
+                    "local_servico": loc, "treino_pes": q2, "nc_fvs": q3, "plano_acao_nc": q4
                 }])
                 df_final = pd.concat([df_old, novo_dado], ignore_index=True)
                 conn.update(worksheet="auditoria_qualidade", data=df_final)
