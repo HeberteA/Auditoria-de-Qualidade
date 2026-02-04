@@ -470,3 +470,174 @@ else:
                 conn.update(worksheet="auditoria_qualidade", data=df_final)
                 st.success("Salvo com sucesso!")
 
+    elif escolha == "Acompanhamento":
+        st.header("ACOMPANHAMENTO DE AUDITORIAS", divider="orange")
+        
+        abas_map = {
+            "Canteiro": "auditoria_canteiro",
+            "Estoque": "auditoria_estoque",
+            "Habite-se": "auditoria_habitese",
+            "Seg. Documental": "auditoria_seg_documental",
+            "Seg. Externo": "auditoria_seg_externo",
+            "Seg. Interno": "auditoria_seg_interno",
+            "Qualidade": "auditoria_qualidade"
+        }
+        
+        col_f1, col_f2, col_f3 = st.columns([2, 1, 1])
+        form_ref = col_f1.selectbox("Formulário", list(abas_map.keys()))
+        
+        df_acompanhamento = conn.read(worksheet=abas_map[form_ref], ttl=0)
+        
+        if not df_acompanhamento.empty:
+            obras_lista = sorted(df_acompanhamento["obra"].unique())
+            auditores_lista = sorted(df_acompanhamento["auditor"].unique())
+            
+            obra_f = col_f2.multiselect("Filtrar por Obra", options=obras_lista)
+            auditor_f = col_f3.multiselect("Filtrar por Auditor", options=auditores_lista)
+    
+            if obra_f:
+                df_acompanhamento = df_acompanhamento[df_acompanhamento["obra"].isin(obra_f)]
+            if auditor_f:
+                df_acompanhamento = df_acompanhamento[df_acompanhamento["auditor"].isin(auditor_f)]
+    
+        modo_visao = option_menu(None, ["Cards", "Tabela"], 
+            icons=['grid-3x3-gap', 'table'], 
+            default_index=0, orientation="horizontal",
+            styles={
+                "container": {"padding": "0!important", "background-color": "transparent"},
+                "nav-link": {"font-size": "14px", "text-align": "center", "margin":"0px"},
+                "nav-link-selected": {"background-color": "#E37026"},
+            }
+        )
+    
+        if df_acompanhamento.empty:
+            st.info("Nenhum dado encontrado para os filtros selecionados")
+        elif modo_visao == "Tabela":
+            st.dataframe(df_acompanhamento, use_container_width=True)
+        else:
+            cols = st.columns(3)
+            for index, row in df_acompanhamento.reset_index().iterrows():
+                with cols[index % 3]:
+                    obs = row.get('observacoes', 'Sem observações')
+                    if pd.isna(obs): obs = "Sem observações"
+                    
+                    st.markdown(f"""
+                    <div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 15px; border: 1px solid rgba(227, 112, 38, 0.2); border-left: 6px solid #E37026; margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <h4 style="margin:0; color:#E37026; font-size: 1.1rem;">{row['obra']}</h4>
+                            <span style="font-size: 0.7rem; color: #888;">{row['timestamp']}</span>
+                        </div>
+                        <p style="font-size: 0.9rem; margin-top: 10px;"><b>Auditor:</b> {row['auditor']}</p>
+                        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 10px 0;">
+                        <p style="font-size: 0.8rem; color: #bbb;">{obs}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+    
+    elif escolha == "Dashboards":
+        import plotly.express as px
+        import plotly.graph_objects as go
+    
+        st.header("DASHBOARD DE QUALIDADE E SEGURANÇA", divider="orange")
+        
+        abas_map = {
+            "Canteiro": "auditoria_canteiro",
+            "Estoque": "auditoria_estoque",
+            "Habite-se": "auditoria_habitese",
+            "Seg. Documental": "auditoria_seg_documental",
+            "Seg. Externo": "auditoria_seg_externo",
+            "Seg. Interno": "auditoria_seg_interno",
+            "Qualidade": "auditoria_qualidade"
+        }
+    
+        def calc_score(df):
+            if df.empty: return 0.0
+            cols_meta = ['timestamp', 'auditor', 'obra', 'observacoes', 'fornecedor', 'colaborador_nome', 'cargo', 'atividade_momento', 'local_servico', 'url_imagem_epi', 'quais_epis_uso', 'insumo_especifico', 'nf_numero', 'grupo_insumo']
+            cols_q = [c for c in df.columns if c not in cols_meta]
+            
+            vals = df[cols_q].astype(str).apply(lambda x: x.str.strip().str.lower())
+            sim = (vals == 'sim').sum().sum()
+            nao = (vals == 'não').sum().sum()
+            
+            if (sim + nao) == 0: return 0.0
+            return (sim / (sim + nao)) * 100
+    
+        scores = {}
+        total_audits = 0
+        all_data = {}
+        
+        for nome, ws in abas_map.items():
+            data = conn.read(worksheet=ws, ttl=0)
+            all_data[nome] = data
+            scores[nome] = calc_score(data)
+            total_audits += len(data)
+    
+        k1, k2, k3, k4 = st.columns(4)
+        avg_score = sum(scores.values()) / len(scores) if scores else 0
+        
+        k1.metric("Auditorias Totais", total_audits)
+        k2.metric("Conformidade Média", f"{avg_score:.1f}%")
+        
+        dfs_para_contagem = [df['obra'] for df in all_data.values() if not df.empty]
+        obras_totais = pd.concat(dfs_para_contagem).nunique() if dfs_para_contagem else 0
+        k3.metric("Obras Atendidas", obras_totais)
+        k4.metric("Setores Monitorados", len(abas_map))
+    
+        st.markdown("---")
+        
+        c1, c2 = st.columns([6, 4])
+        
+        with c1:
+            st.subheader("Índice de Conformidade por Setor")
+            df_scores = pd.DataFrame(list(scores.items()), columns=['Setor', 'Conformidade'])
+            fig_bar = px.bar(df_scores, x='Setor', y='Conformidade', text_auto='.1f',
+                            color='Conformidade', color_continuous_scale='Oranges',
+                            template="plotly_dark")
+            fig_bar.update_layout(yaxis_range=[0, 105])
+            st.plotly_chart(fig_bar, use_container_width=True)
+    
+        with c2:
+            st.subheader("Volume de Dados por Setor")
+            audit_dist = pd.DataFrame([{'Setor': k, 'Quantidade': len(v)} for k, v in all_data.items()])
+            fig_pie = px.pie(audit_dist, names='Setor', values='Quantidade', hole=0.4,
+                            color_discrete_sequence=px.colors.sequential.Oranges_r,
+                            template="plotly_dark")
+            st.plotly_chart(fig_pie, use_container_width=True)
+    
+        st.markdown("---")
+        st.subheader("Detalhamento Técnico por Formulário")
+        setor_sel = st.selectbox("Selecione o Setor para Análise Profunda", list(abas_map.keys()))
+        df_setor = all_data[setor_sel]
+        
+        if not df_setor.empty:
+            col_d1, col_d2 = st.columns(2)
+            
+            with col_d1:
+                st.write(f"Conformidade por Unidade/Obra")
+                conf_obra = []
+                for ob in df_setor['obra'].unique():
+                    val = calc_score(df_setor[df_setor['obra'] == ob])
+                    conf_obra.append({'Obra': ob, 'Conformidade': val})
+                df_conf_ob = pd.DataFrame(conf_obra)
+                fig_ob = px.bar(df_conf_ob, x='Obra', y='Conformidade', color='Conformidade',
+                               color_continuous_scale='YlOrBr', template="plotly_dark")
+                st.plotly_chart(fig_ob, use_container_width=True)
+                
+            with col_d2:
+                st.write(f"Análise de Itens Críticos (Não Conformidades)")
+                cols_meta = ['timestamp', 'auditor', 'obra', 'observacoes', 'fornecedor', 'colaborador_nome', 'cargo', 'atividade_momento', 'local_servico', 'url_imagem_epi', 'quais_epis_uso', 'insumo_especifico', 'nf_numero', 'grupo_insumo']
+                qs = [c for c in df_setor.columns if c not in cols_meta]
+                
+                item_scores = []
+                for q in qs:
+                    s = (df_setor[q].astype(str).str.strip().str.lower() == 'sim').sum()
+                    n = (df_setor[q].astype(str).str.strip().str.lower() == 'não').sum()
+                    perc = (s / (s + n) * 100) if (s+n) > 0 else 0
+                    item_scores.append({'Requisito': q, 'Conformidade': perc})
+                
+                df_items = pd.DataFrame(item_scores).sort_values('Conformidade')
+                fig_items = px.bar(df_items, y='Requisito', x='Conformidade', orientation='h',
+                                  color='Conformidade', color_continuous_scale='Reds_r',
+                                  template="plotly_dark")
+                st.plotly_chart(fig_items, use_container_width=True)
+        else:
+            st.warning("Base de dados vazia para o setor selecionado")
