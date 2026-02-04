@@ -621,8 +621,8 @@ else:
         st.markdown("---")
         st.subheader("Filtro Avançado por Setor")
         setor_sel = st.selectbox("Analisar Setor Específico", list(abas_map.keys()))
-        df_setor = all_data[setor_sel]
-        
+        df_setor = all_data.get(setor_sel, pd.DataFrame())
+    
         if not df_setor.empty:
             col_d1, col_d2 = st.columns(2)
             
@@ -656,4 +656,4 @@ else:
                 fig_items.update_layout(xaxis_range=[0, 115], plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
                 st.plotly_chart(fig_items, use_container_width=True)
         else:
-            st.warning("Sem dados para este setor")
+            st.warning(f"O setor '{setor_sel}' ainda não possui registros para análise.")
