@@ -550,6 +550,7 @@ else:
     elif escolha == "Dashboards":
         import plotly.express as px
         import plotly.graph_objects as go
+        from datetime import datetime
     
         st.header("DASHBOARD DE QUALIDADE E SEGURANÇA", divider="orange")
         
@@ -563,7 +564,7 @@ else:
             "Qualidade": "auditoria_qualidade"
         }
     
-        escala_lavie = [ [0.5, "rgb(0, 0, 0)"], [0, "rgb(139, 0, 0)"], [1, "rgb(0, 100, 0)"]]
+        escala_lavie = [[0, "rgb(139, 0, 0)"], [0.5, "rgb(0, 0, 0)"], [1, "rgb(0, 100, 0)"]]
     
         def calc_score(df):
             if df.empty: return 0.0
@@ -578,8 +579,14 @@ else:
     
         scores = {}
         total_audits = 0
+        total_nao_conformidades = 0
+        audits_mes_atual = 0
+        auditor_counts = {}
+        obras_scores = {}
         all_data = {}
         
+        mes_atual_str = datetime.now().strftime("%Y-%m")
+    
         for nome, ws in abas_map.items():
             try:
                 data = conn.read(worksheet=ws, ttl=0)
@@ -590,24 +597,130 @@ else:
                     all_data[nome] = data
                     scores[nome] = calc_score(data)
                     total_audits += len(data)
+                    
+                    cols_meta = ['timestamp', 'auditor', 'obra', 'observacoes', 'fornecedor', 'colaborador_nome', 'cargo', 'atividade_momento', 'local_servico', 'url_imagem_epi', 'quais_epis_uso', 'insumo_especifico', 'nf_numero', 'grupo_insumo']
+                    cols_q = [c for c in data.columns if c not in cols_meta]
+                    vals = data[cols_q].astype(str).apply(lambda x: x.str.strip().str.lower())
+                    total_nao_conformidades += (vals == 'não').sum().sum()
+    
+                    if 'timestamp' in data.columns:
+                        data['dt_mes'] = pd.to_datetime(data['timestamp'], dayfirst=True, errors='coerce').dt.to_period('M').astype(str)
+                        audits_mes_atual += len(data[data['dt_mes'] == mes_atual_str])
+    
+                    if 'auditor' in data.columns:
+                        vc = data['auditor'].value_counts().to_dict()
+                        for aud, count in vc.items():
+                            auditor_counts[aud] = auditor_counts.get(aud, 0) + count
+                    
+                    if 'obra' in data.columns:
+                        for ob in data['obra'].unique():
+                            s = calc_score(data[data['obra'] == ob])
+                            if ob not in obras_scores:
+                                obras_scores[ob] = []
+                            obras_scores[ob].append(s)
+    
             except Exception:
                 all_data[nome] = pd.DataFrame()
                 scores[nome] = 0.0
     
-        k1, k2, k3, k4 = st.columns(4)
         avg_score = sum(scores.values()) / len(scores) if scores else 0
         
         dfs_para_contagem = [df['obra'] for df in all_data.values() if not df.empty]
         todas_obras_df = pd.concat(dfs_para_contagem) if dfs_para_contagem else pd.Series()
         obras_unicas = sorted(todas_obras_df.unique()) if not todas_obras_df.empty else []
         
-        k1.metric("Auditorias Totais", total_audits)
-        k2.metric("Conformidade Média", f"{avg_score:.1f}%")
-        k3.metric("Obras Atendidas", len(obras_unicas))
-        k4.metric("Setores Monitorados", len([d for d in all_data.values() if not d.empty]))
+        obra_critica = "-"
+        menor_nota = 100.0
+        for ob, notas in obras_scores.items():
+            media_ob = sum(notas)/len(notas) if notas else 0
+            if media_ob < menor_nota:
+                menor_nota = media_ob
+                obra_critica = ob
+    
+        top_auditor = max(auditor_counts, key=auditor_counts.get) if auditor_counts else "-"
+    
+        st.markdown("""
+        <style>
+        .kpi-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+            border: 1px solid rgba(227, 112, 38, 0.2);
+            border-radius: 16px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+            height: 140px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .kpi-card:hover {
+            border-color: rgba(227, 112, 38, 0.6);
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .kpi-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: #E37026;
+        }
+        .kpi-title {
+            color: #aaa;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .kpi-value {
+            color: #fff;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 5px 0;
+        }
+        .kpi-sub {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.75rem;
+        }
+        .kpi-icon {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            color: rgba(227, 112, 38, 0.1);
+            font-size: 3rem;
+            font-weight: bold;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+    
+        def card(title, value, sub, icon_char):
+            return f"""
+            <div class="kpi-card">
+                <div class="kpi-icon">{icon_char}</div>
+                <div class="kpi-title">{title}</div>
+                <div class="kpi-value">{value}</div>
+                <div class="kpi-sub">{sub}</div>
+            </div>
+            """
+    
+        c1, c2, c3, c4 = st.columns(4)
+        with c1: st.markdown(card("Total Auditorias", total_audits, "Histórico completo", "📋"), unsafe_allow_html=True)
+        with c2: st.markdown(card("Conformidade Média", f"{avg_score:.1f}%", "Média global ponderada", "📈"), unsafe_allow_html=True)
+        with c3: st.markdown(card("Auditorias (Mês)", audits_mes_atual, f"Referente a {datetime.now().strftime('%m/%Y')}", "📅"), unsafe_allow_html=True)
+        with c4: st.markdown(card("Não Conformidades", total_nao_conformidades, "Itens reprovados (Risco)", "⚠️"), unsafe_allow_html=True)
+    
+        st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
+    
+        c5, c6, c7, c8 = st.columns(4)
+        with c5: st.markdown(card("Obras Ativas", len(obras_unicas), "Unidades auditadas", "🏗️"), unsafe_allow_html=True)
+        with c6: st.markdown(card("Setores", len([d for d in all_data.values() if not d.empty]), "Áreas monitoradas", "🔍"), unsafe_allow_html=True)
+        with c7: st.markdown(card("Obra em Alerta", obra_critica, f"Menor nota: {menor_nota:.1f}%", "🚨"), unsafe_allow_html=True)
+        with c8: st.markdown(card("Top Auditor", top_auditor, "Maior volume de registros", "🏆"), unsafe_allow_html=True)
     
         st.markdown("---")
-        
         st.subheader("Visão Geral")
         
         st.markdown("##### Evolução Mensal de Conformidade")
@@ -744,7 +857,7 @@ else:
                 if resumo_reqs:
                     df_req_obra = pd.DataFrame(resumo_reqs).groupby('Requisito').sum().reset_index()
                     df_req_obra['Conformidade'] = (df_req_obra['Sim'] / (df_req_obra['Sim'] + df_req_obra['Nao'])) * 100
-                    df_req_obra = df_req_obra.sort_values('Conformidade', ascending=True).head(20) # Top 20 para não poluir
+                    df_req_obra = df_req_obra.sort_values('Conformidade', ascending=True).head(20)
                     
                     fig_req_ob = px.bar(df_req_obra, y='Requisito', x='Conformidade', orientation='h', text_auto='.1f',
                                        color='Conformidade', color_continuous_scale='RdBu', template="plotly_dark")
