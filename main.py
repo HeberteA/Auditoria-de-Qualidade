@@ -649,7 +649,7 @@ else:
             position: relative;
             overflow: hidden;
             transition: transform 0.3s ease, border-color 0.3s ease;
-            height: 130px;
+            height: 140px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -730,14 +730,17 @@ else:
         evo_list = []
         for nome_setor, df_s in all_data.items():
             if not df_s.empty and 'timestamp' in df_s.columns:
-                try:
-                    df_s['dt'] = pd.to_datetime(df_s['timestamp'], dayfirst=True).dt.to_period('M').astype(str)
-                    for mes in df_s['dt'].unique():
-                        df_mes = df_s[df_s['dt'] == mes]
+                temp_dates = pd.to_datetime(df_s['timestamp'], dayfirst=True, errors='coerce')
+                
+                df_valid = df_s[temp_dates.notna()].copy()
+                
+                if not df_valid.empty:
+                    df_valid['dt'] = temp_dates[temp_dates.notna()].dt.to_period('M').astype(str)
+                    
+                    for mes in sorted(df_valid['dt'].unique()):
+                        df_mes = df_valid[df_valid['dt'] == mes]
                         score_mes = calc_score(df_mes)
                         evo_list.append({'Mês': mes, 'Setor': nome_setor, 'Conformidade': score_mes})
-                except Exception:
-                    pass
         
         if evo_list:
             df_evo = pd.DataFrame(evo_list).sort_values('Mês')
