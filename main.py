@@ -557,7 +557,6 @@ else:
         abas_map = {
             "Canteiro": "auditoria_canteiro",
             "Estoque": "auditoria_estoque",
-            "Habite-se": "auditoria_habitese",
             "Seg. Documental": "auditoria_seg_documental",
             "Seg. Externo": "auditoria_seg_externo",
             "Seg. Interno": "auditoria_seg_interno",
