@@ -645,7 +645,7 @@ else:
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
             border: 1px solid rgba(227, 112, 38, 0.2);
             border-radius: 10px;
-            padding: 20px;
+            padding: 5px;
             position: relative;
             overflow: hidden;
             transition: transform 0.3s ease, border-color 0.3s ease;
@@ -687,8 +687,8 @@ else:
         }
         .kpi-icon {
             position: absolute;
-            right: 20px;
-            top: 20px;
+            right: 10px;
+            top: 10px;
             color: rgba(227, 112, 38, 0.1);
             font-size: 3rem;
             font-weight: bold;
