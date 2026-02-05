@@ -680,7 +680,7 @@ else:
             color: #fff;
             font-size: 1.8rem;
             font-weight: 600;
-            margin: 5px 0;
+            margin: 0px 0;
             padding: 5px;
         }
         .kpi-sub {
