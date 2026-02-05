@@ -649,7 +649,7 @@ else:
             position: relative;
             overflow: hidden;
             transition: transform 0.3s ease, border-color 0.3s ease;
-            height: 120px;
+            height: 130px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
