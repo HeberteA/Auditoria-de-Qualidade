@@ -645,11 +645,11 @@ else:
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
             border: 1px solid rgba(227, 112, 38, 0.2);
             border-radius: 16px;
-            padding: 20px;
+            padding: 10px;
             position: relative;
             overflow: hidden;
             transition: transform 0.3s ease, border-color 0.3s ease;
-            height: 140px;
+            height: 100px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -707,18 +707,18 @@ else:
             """
     
         c1, c2, c3, c4 = st.columns(4)
-        with c1: st.markdown(card("Total Auditorias", total_audits, "Histórico completo", "📋"), unsafe_allow_html=True)
-        with c2: st.markdown(card("Conformidade Média", f"{avg_score:.1f}%", "Média global ponderada", "📈"), unsafe_allow_html=True)
-        with c3: st.markdown(card("Auditorias (Mês)", audits_mes_atual, f"Referente a {datetime.now().strftime('%m/%Y')}", "📅"), unsafe_allow_html=True)
-        with c4: st.markdown(card("Não Conformidades", total_nao_conformidades, "Itens reprovados (Risco)", "⚠️"), unsafe_allow_html=True)
+        with c1: st.markdown(card("Total Auditorias", total_audits, "Histórico completo", ""), unsafe_allow_html=True)
+        with c2: st.markdown(card("Conformidade Média", f"{avg_score:.1f}%", "Média global ponderada", ""), unsafe_allow_html=True)
+        with c3: st.markdown(card("Auditorias (Mês)", audits_mes_atual, f"Referente a {datetime.now().strftime('%m/%Y')}", ""), unsafe_allow_html=True)
+        with c4: st.markdown(card("Não Conformidades", total_nao_conformidades, "Itens reprovados (Risco)", ""), unsafe_allow_html=True)
     
         st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
     
         c5, c6, c7, c8 = st.columns(4)
-        with c5: st.markdown(card("Obras Ativas", len(obras_unicas), "Unidades auditadas", "🏗️"), unsafe_allow_html=True)
-        with c6: st.markdown(card("Setores", len([d for d in all_data.values() if not d.empty]), "Áreas monitoradas", "🔍"), unsafe_allow_html=True)
-        with c7: st.markdown(card("Obra em Alerta", obra_critica, f"Menor nota: {menor_nota:.1f}%", "🚨"), unsafe_allow_html=True)
-        with c8: st.markdown(card("Top Auditor", top_auditor, "Maior volume de registros", "🏆"), unsafe_allow_html=True)
+        with c5: st.markdown(card("Obras Ativas", len(obras_unicas), "Unidades auditadas", ""), unsafe_allow_html=True)
+        with c6: st.markdown(card("Setores", len([d for d in all_data.values() if not d.empty]), "Áreas monitoradas", ""), unsafe_allow_html=True)
+        with c7: st.markdown(card("Obra em Alerta", obra_critica, f"Menor nota: {menor_nota:.1f}%", ""), unsafe_allow_html=True)
+        with c8: st.markdown(card("Auditor", top_auditor, "Maior volume de registros", ""), unsafe_allow_html=True)
     
         st.markdown("---")
         st.subheader("Visão Geral")
