@@ -591,6 +591,8 @@ else:
         
         dfs_para_contagem = [df['obra'] for df in all_data.values() if not df.empty]
         obras_totais = pd.concat(dfs_para_contagem).nunique() if dfs_para_contagem else 0
+        todas_obras_df = pd.concat(dfs_para_contagem) if dfs_para_contagem else pd.Series()
+        obras_unicas = sorted(todas_obras_df.unique()) if not todas_obras_df.empty else []
         k3.metric("Obras Atendidas", obras_totais)
         k4.metric("Setores Monitorados", len(abas_map))
     
