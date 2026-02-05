@@ -644,8 +644,8 @@ else:
         .kpi-card {
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
             border: 1px solid rgba(227, 112, 38, 0.2);
-            border-radius: 16px;
-            padding: 10px;
+            border-radius: 10px;
+            padding: 20px;
             position: relative;
             overflow: hidden;
             transition: transform 0.3s ease, border-color 0.3s ease;
