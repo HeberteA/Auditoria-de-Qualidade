@@ -670,20 +670,23 @@ else:
         }
         .kpi-title {
             color: #aaa;
-            font-size: 0.65rem;
+            font-size: 0.75rem;
             font-weight: 450;
             text-transform: uppercase;
             letter-spacing: 1px;
+            padding: 5px;
         }
         .kpi-value {
             color: #fff;
             font-size: 1.8rem;
             font-weight: 600;
             margin: 5px 0;
+            padding: 5px;
         }
         .kpi-sub {
             color: rgba(255, 255, 255, 0.4);
             font-size: 0.75rem;
+            padding: 5px;
         }
         .kpi-icon {
             position: absolute;
