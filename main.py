@@ -649,7 +649,7 @@ else:
             audit_dist = pd.DataFrame([{'Setor': k, 'Quantidade': len(v)} for k, v in all_data.items() if not v.empty])
             if not audit_dist.empty:
                 fig_pie = px.pie(audit_dist, names='Setor', values='Quantidade', hole=0.4,
-                                template="plotly_dark", px.colors.sequential.Oranges_r)
+                                template="plotly_dark", color_discrete_sequence=px.colors.sequential.Oranges_r)
                 fig_pie.update_traces(textinfo='value+percent')
                 fig_pie.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
                 st.plotly_chart(fig_pie, use_container_width=True)
