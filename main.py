@@ -201,7 +201,7 @@ else:
             q7 = st.radio("As escadas de canteiro (Quando houver) estão em condições seguras de uso", sim_nao_na, horizontal=True)
             q8 = st.radio("As barreiras e guarda corpos (quando houver) estão instalados em conformidade com as normas de segurança?", sim_nao_na, horizontal=True)
             q9 = st.radio("As áreas abaixo de locais de trabalho elevado (quando houver), onde há passagem de pessoas, estão protegidas contra a queda de objetos?", sim_nao_na, horizontal=True)
-            q10 = st.radio("As máquinas e equipamentos (Bancada de serra, betoneira, guincho, etc) em uso estão em boas condições de funcionamento?", sim_nao, horizontal=True)
+            q10 = st.radio("As máquinas e equipamentos (Bancada de serra, betoneira, guincho, etc) em uso estão em boas condições de funcionamento?", sim_nao_na, horizontal=True)
             q11 = st.radio("As instalações provisórias de canteiro estão em conformidade de segurança?", sim_nao, horizontal=True)
             q12 = st.radio("A obra possui extintores nas áreas exigidas por norma?", sim_nao, horizontal=True)
             st.subheader("ESCRITÓRIO DE OBRA")
@@ -324,27 +324,27 @@ else:
             obr = st.selectbox("Obra auditada *", obras)
 
             st.subheader("Documentação Técnica e Programas")
-            pgr = st.radio("Há PGR (Programa de Gerenciamento de Riscos) em obra? (Solicitar evidência) *", sim_nao, horizontal=True)
-            pcmso = st.radio("Há PCMSO (Programa de Controle Médico de Saúde Ocupacional) em obra? (Solicitar evidência) *", sim_nao, horizontal=True)
-            art_seg = st.radio("Há ART (Anotação de Responsabilidade Técnica) de segurança em obra? (Solicitar evidência) *", sim_nao, horizontal=True)
-            art_exc = st.radio("Há ART de execução de obra e canteiro de obra? (Solicitar evidência) *", sim_nao, horizontal=True)
-            art_cant = st.radio("Há ART e projeto de canteiro da obra (Atualizado)? (Solicitar evidência) *", sim_nao, horizontal=True)
-            art_ele = st.radio("Há ART e projeto elétrico de canteiro da obra (Atualizado)? (Solicitar evidência) *", sim_nao, horizontal=True)
-            art_inc = st.radio("Há ART e projeto de incêndio de canteiro da obra (Atualizado)? (Solicitar evidência) *", sim_nao, horizontal=True)
-            spda = st.radio("Há projeto de SPDA (Sistema de proteção contra descarga atmosférica) ou laudo de despensa? (Solicitar evidência) *", sim_nao, horizontal=True)
-            ergonomia = st.radio("Há relatório de análise ergonômica? (Solicitar evidência) *", sim_nao, horizontal=True)
-            pca = st.radio("Há PCA (Programa de Proteção Auditiva)? (Solicitar evidência) *", sim_nao, horizontal=True)
-            ppr = st.radio("Há PPR (Programa de Proteção Respiratória)? (Solicitar evidência) *", sim_nao, horizontal=True)
-            mte = st.radio("Há comunicação prévia de início de obra cadastrado no MTE? (Solicitar evidência) *", sim_nao, horizontal=True)
-            mapa_risco = st.radio("Há Mapa de risco aplicado ao canteiro? (Solicitar evidência) *", sim_nao, horizontal=True)
-            cno = st.radio("Há CNO (Cadastro Nacional de Obra) - Receita Federal? (Solicitar evidência) *", sim_nao, horizontal=True)
+            pgr = st.radio("Há PGR (Programa de Gerenciamento de Riscos) em obra? (Solicitar evidência) ", sim_nao, horizontal=True)
+            pcmso = st.radio("Há PCMSO (Programa de Controle Médico de Saúde Ocupacional) em obra? (Solicitar evidência) ", sim_nao, horizontal=True)
+            art_seg = st.radio("Há ART (Anotação de Responsabilidade Técnica) de segurança em obra? (Solicitar evidência) ", sim_nao, horizontal=True)
+            art_exc = st.radio("Há ART de execução de obra e canteiro de obra? (Solicitar evidência) ", sim_nao, horizontal=True)
+            art_cant = st.radio("Há ART e projeto de canteiro da obra (Atualizado)? (Solicitar evidência) ", sim_nao, horizontal=True)
+            art_ele = st.radio("Há ART e projeto elétrico de canteiro da obra (Atualizado)? (Solicitar evidência) ", sim_nao, horizontal=True)
+            art_inc = st.radio("Há ART e projeto de incêndio de canteiro da obra (Atualizado)? (Solicitar evidência) ", sim_nao, horizontal=True)
+            spda = st.radio("Há projeto de SPDA (Sistema de proteção contra descarga atmosférica) ou laudo de despensa? (Solicitar evidência) ", sim_nao, horizontal=True)
+            ergonomia = st.radio("Há relatório de análise ergonômica? (Solicitar evidência) ", sim_nao, horizontal=True)
+            pca = st.radio("Há PCA (Programa de Proteção Auditiva)? (Solicitar evidência) ", sim_nao, horizontal=True)
+            ppr = st.radio("Há PPR (Programa de Proteção Respiratória)? (Solicitar evidência) ", sim_nao, horizontal=True)
+            mte = st.radio("Há comunicação prévia de início de obra cadastrado no MTE? (Solicitar evidência) ", sim_nao, horizontal=True)
+            mapa_risco = st.radio("Há Mapa de risco aplicado ao canteiro? (Solicitar evidência) ", sim_nao, horizontal=True)
+            cno = st.radio("Há CNO (Cadastro Nacional de Obra) - Receita Federal? (Solicitar evidência) ", sim_nao, horizontal=True)
         
             st.subheader("Laudos de Máquinas e Equipamentos")
-            serra = st.radio("Há laudo de conformidade de instalação de Bancada de Serra? (Solicitar evidência) *", sim_nao, horizontal=True)
-            betoneira = st.radio("Há laudo de conformidade de instalação de Betoneira? (Solicitar evidência) *", sim_nao, horizontal=True)
-            grua = st.radio("Há laudo de conformidade de instalação de Grua? (Solicitar evidência) *", sim_nao, horizontal=True)
-            cremalheira = st.radio("Há laudo de conformidade de instalação de Elevador Cremalheira? (Solicitar evidência) *", sim_nao, horizontal=True)
-            policorte = st.radio("Há laudo de conformidade de Policorte? (Solicitar evidência) *", sim_nao, horizontal=True)
+            serra = st.radio("Há laudo de conformidade de instalação de Bancada de Serra? (Solicitar evidência) ", sim_nao_na, horizontal=True)
+            betoneira = st.radio("Há laudo de conformidade de instalação de Betoneira? (Solicitar evidência) ", sim_nao_na, horizontal=True)
+            grua = st.radio("Há laudo de conformidade de instalação de Grua? (Solicitar evidência) ", sim_nao_na, horizontal=True)
+            cremalheira = st.radio("Há laudo de conformidade de instalação de Elevador Cremalheira? (Solicitar evidência) ", sim_nao_na, horizontal=True)
+            policorte = st.radio("Há laudo de conformidade de Policorte? (Solicitar evidência) ", sim_nao_na, horizontal=True)
         
             obs_doc = st.text_area("Observações importantes")
 
@@ -619,13 +619,12 @@ else:
             st.plotly_chart(fig_pie, use_container_width=True)
     
         st.markdown("---")
-        st.subheader("Filtro Avançado por Setor")
+        st.subheader("Filtro por Setor")
         setor_sel = st.selectbox("Analisar Setor Específico", list(abas_map.keys()))
         df_setor = all_data.get(setor_sel, pd.DataFrame())
     
         if not df_setor.empty:
             col_d1, col_d2 = st.columns(2)
-            
             with col_d1:
                 st.write("Conformidade por Obra")
                 conf_obra = []
@@ -634,7 +633,7 @@ else:
                     conf_obra.append({'Obra': ob, 'Conformidade': val})
                 df_conf_ob = pd.DataFrame(conf_obra)
                 fig_ob = px.bar(df_conf_ob, x='Obra', y='Conformidade', text_auto='.1f',
-                               color='Conformidade', color_continuous_scale='YlOrBr', template="plotly_dark")
+                               color='Conformidade', color_continuous_scale='RdYlGn', template="plotly_dark")
                 fig_ob.update_traces(textposition='outside')
                 fig_ob.update_layout(yaxis_range=[0, 115], plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
                 st.plotly_chart(fig_ob, use_container_width=True)
@@ -651,9 +650,61 @@ else:
                     item_scores.append({'Requisito': q, 'Conformidade': perc})
                 df_items = pd.DataFrame(item_scores).sort_values('Conformidade')
                 fig_items = px.bar(df_items, y='Requisito', x='Conformidade', orientation='h', text_auto='.1f',
-                                  color='Conformidade', color_continuous_scale='Reds_r', template="plotly_dark")
+                                  color='Conformidade', color_continuous_scale='RdYlGn', template="plotly_dark")
                 fig_items.update_traces(textposition='outside')
                 fig_items.update_layout(xaxis_range=[0, 115], plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
                 st.plotly_chart(fig_items, use_container_width=True)
+                
+        st.markdown("---")
+        st.subheader("Filtro por Obra")
+        if obras_unicas:
+            obra_sel = st.selectbox("Analisar Obra Específica", obras_unicas)
+            col_e1, col_e2 = st.columns(2)
+            
+            with col_e1:
+                st.write("Conformidade por Setor")
+                conf_setor_obra = []
+                for nome_setor, df_s in all_data.items():
+                    if not df_s.empty and obra_sel in df_s['obra'].values:
+                        val = calc_score(df_s[df_s['obra'] == obra_sel])
+                        conf_setor_obra.append({'Setor': nome_setor, 'Conformidade': val})
+                
+                df_conf_so = pd.DataFrame(conf_setor_obra)
+                if not df_conf_so.empty:
+                    fig_so = px.bar(df_conf_so, x='Setor', y='Conformidade', text_auto='.1f',
+                                   color='Conformidade', color_continuous_scale='RdYlGn', template="plotly_dark")
+                    fig_so.update_traces(textposition='outside')
+                    fig_so.update_layout(yaxis_range=[0, 115], plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
+                    st.plotly_chart(fig_so, use_container_width=True)
+                else:
+                    st.write("Sem dados para esta obra.")
+    
+            with col_e2:
+                st.write("Ranking de Requisitos (Geral da Obra)")
+                todos_requisitos = []
+                cols_meta = ['timestamp', 'auditor', 'obra', 'observacoes', 'fornecedor', 'colaborador_nome', 'cargo', 'atividade_momento', 'local_servico', 'url_imagem_epi', 'quais_epis_uso', 'insumo_especifico', 'nf_numero', 'grupo_insumo']
+                
+                for df_s in all_data.values():
+                    if not df_s.empty and obra_sel in df_s['obra'].values:
+                        df_filtrado = df_s[df_s['obra'] == obra_sel]
+                        qs = [c for c in df_filtrado.columns if c not in cols_meta]
+                        for q in qs:
+                            s = (df_filtrado[q].astype(str).str.strip().str.lower() == 'sim').sum()
+                            n = (df_filtrado[q].astype(str).str.strip().str.lower() == 'não').sum()
+                            if (s + n) > 0:
+                                todos_requisitos.append({'Requisito': q, 'Sim': s, 'Nao': n})
+                
+                if todos_requisitos:
+                    df_req_obra = pd.DataFrame(todas_requisitos).groupby('Requisito').sum().reset_index()
+                    df_req_obra['Conformidade'] = (df_req_obra['Sim'] / (df_req_obra['Sim'] + df_req_obra['Nao'])) * 100
+                    df_req_obra = df_req_obra.sort_values('Conformidade').head(15)
+                    
+                    fig_req_ob = px.bar(df_req_obra, y='Requisito', x='Conformidade', orientation='h', text_auto='.1f',
+                                       color='Conformidade', color_continuous_scale='RdYlGn', template="plotly_dark")
+                    fig_req_ob.update_traces(textposition='outside')
+                    fig_req_ob.update_layout(xaxis_range=[0, 115], plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
+                    st.plotly_chart(fig_req_ob, use_container_width=True)
+                else:
+                    st.write("Sem requisitos registrados para esta obra.")
         else:
-            st.warning(f"O setor '{setor_sel}' ainda não possui registros para análise.")
+            st.warning("Nenhuma obra encontrada nos registros.")
