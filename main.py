@@ -697,7 +697,7 @@ else:
                                 todos_requisitos.append({'Requisito': q, 'Sim': s, 'Nao': n})
                 
                 if todos_requisitos:
-                    df_req_obra = pd.DataFrame(todas_requisitos).groupby('Requisito').sum().reset_index()
+                    df_req_obra = pd.DataFrame(item_scores).groupby('Requisito').sum().reset_index()
                     df_req_obra['Conformidade'] = (df_req_obra['Sim'] / (df_req_obra['Sim'] + df_req_obra['Nao'])) * 100
                     df_req_obra = df_req_obra.sort_values('Conformidade').head(15)
                     
