@@ -649,7 +649,7 @@ else:
             position: relative;
             overflow: hidden;
             transition: transform 0.3s ease, border-color 0.3s ease;
-            height: 100px;
+            height: 120px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -665,12 +665,12 @@ else:
             top: 0;
             left: 0;
             width: 4px;
-            height: 90%;
+            height: 100%;
             background: #E37026;
         }
         .kpi-title {
             color: #aaa;
-            font-size: 0.85rem;
+            font-size: 0.65rem;
             font-weight: 450;
             text-transform: uppercase;
             letter-spacing: 1px;
