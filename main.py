@@ -638,7 +638,7 @@ else:
             st.markdown("##### Índice de Conformidade por Setor")
             df_scores = pd.DataFrame(list(scores.items()), columns=['Setor', 'Conformidade'])
             fig_bar = px.bar(df_scores, x='Setor', y='Conformidade', text_auto='.1f',
-                            color='Conformidade', color_continuous_scale=escala_lavie,
+                            color='Conformidade', color_continuous_scale='BrBG',
                             template="plotly_dark")
             fig_bar.update_traces(textposition='outside')
             fig_bar.update_layout(yaxis_range=[0, 115], plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
@@ -649,7 +649,7 @@ else:
             audit_dist = pd.DataFrame([{'Setor': k, 'Quantidade': len(v)} for k, v in all_data.items() if not v.empty])
             if not audit_dist.empty:
                 fig_pie = px.pie(audit_dist, names='Setor', values='Quantidade', hole=0.4,
-                                template="plotly_dark", color_discrete_sequence=px.colors.sequential.Greens_r)
+                                template="plotly_dark", color_discrete_sequence='Oranges')
                 fig_pie.update_traces(textinfo='value+percent')
                 fig_pie.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
                 st.plotly_chart(fig_pie, use_container_width=True)
@@ -672,7 +672,7 @@ else:
                         conf_obra.append({'Obra': ob, 'Conformidade': val})
                     df_conf_ob = pd.DataFrame(conf_obra)
                     fig_ob = px.bar(df_conf_ob, x='Obra', y='Conformidade', text_auto='.1f',
-                                   color='Conformidade', color_continuous_scale=escala_lavie, template="plotly_dark")
+                                   color='Conformidade', color_continuous_scale='BrBG', template="plotly_dark")
                     fig_ob.update_traces(textposition='outside')
                     fig_ob.update_layout(yaxis_range=[0, 115], plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
                     st.plotly_chart(fig_ob, use_container_width=True)
@@ -692,7 +692,7 @@ else:
                 if item_scores:
                     df_items = pd.DataFrame(item_scores).sort_values('Conformidade', ascending=True)
                     fig_items = px.bar(df_items, y='Requisito', x='Conformidade', orientation='h', text_auto='.1f',
-                                      color='Conformidade', color_continuous_scale=escala_lavie, template="plotly_dark")
+                                      color='Conformidade', color_continuous_scale='BrBG', template="plotly_dark")
                     fig_items.update_traces(textposition='outside')
                     fig_items.update_layout(xaxis_range=[0, 115], plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
                     st.plotly_chart(fig_items, use_container_width=True)
@@ -719,7 +719,7 @@ else:
                 df_conf_so = pd.DataFrame(conf_setor_obra)
                 if not df_conf_so.empty:
                     fig_so = px.bar(df_conf_so, x='Setor', y='Conformidade', text_auto='.1f',
-                                   color='Conformidade', color_continuous_scale=escala_lavie, template="plotly_dark")
+                                   color='Conformidade', color_continuous_scale='BrBG', template="plotly_dark")
                     fig_so.update_traces(textposition='outside')
                     fig_so.update_layout(yaxis_range=[0, 115], plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
                     st.plotly_chart(fig_so, use_container_width=True)
@@ -747,7 +747,7 @@ else:
                     df_req_obra = df_req_obra.sort_values('Conformidade', ascending=True).head(20) # Top 20 para não poluir
                     
                     fig_req_ob = px.bar(df_req_obra, y='Requisito', x='Conformidade', orientation='h', text_auto='.1f',
-                                       color='Conformidade', color_continuous_scale=escala_lavie, template="plotly_dark")
+                                       color='Conformidade', color_continuous_scale='BrBG', template="plotly_dark")
                     fig_req_ob.update_traces(textposition='outside')
                     fig_req_ob.update_layout(xaxis_range=[0, 115], plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
                     st.plotly_chart(fig_req_ob, use_container_width=True)
