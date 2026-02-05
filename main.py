@@ -642,7 +642,7 @@ else:
         st.markdown("""
         <style>
         .kpi-card {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+            background: linear-gradient(100deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
             border: 1px solid rgba(227, 112, 38, 0.2);
             border-radius: 10px;
             padding: 10px;
@@ -665,20 +665,20 @@ else:
             top: 0;
             left: 0;
             width: 4px;
-            height: 100%;
+            height: 90%;
             background: #E37026;
         }
         .kpi-title {
             color: #aaa;
             font-size: 0.85rem;
-            font-weight: 500;
+            font-weight: 450;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
         .kpi-value {
             color: #fff;
             font-size: 1.8rem;
-            font-weight: 700;
+            font-weight: 600;
             margin: 5px 0;
         }
         .kpi-sub {
@@ -690,7 +690,7 @@ else:
             right: 0px;
             top: 0px;
             color: rgba(227, 112, 38, 0.1);
-            font-size: 3rem;
+            font-size: 1rem;
             font-weight: bold;
         }
         </style>
