@@ -483,69 +483,135 @@ else:
             "Qualidade": "auditoria_qualidade"
         }
         
-        col_f1, col_f2, col_f3 = st.columns([2, 1, 1])
-        form_ref = col_f1.selectbox("Formulário", list(abas_map.keys()))
+        @st.dialog("Editar Registro")
+        def dialog_editar(index_real, row_data, df_completo, nome_planilha):
+            st.write(f"Editando registro de: **{row_data.get('obra', 'N/A')}**")
+            st.caption(f"ID: {index_real} | Auditor: {row_data.get('auditor', 'N/A')}")
+            
+            novos_dados = {}
+            cols = df_completo.columns.tolist()
+            
+            for col in cols:
+                valor_atual = row_data[col]
+                
+                if col == "timestamp":
+                    st.text_input(f"Data (Timestamp)", value=valor_atual, disabled=True, key=f"edit_{col}_{index_real}")
+                    novos_dados[col] = valor_atual
+                    continue
+
+                if str(valor_atual) in ["Sim", "Não", "Não se aplica"]:
+                    opcoes = ["Sim", "Não", "Não se aplica"]
+                    idx_sel = opcoes.index(valor_atual) if valor_atual in opcoes else 0
+                    novos_dados[col] = st.selectbox(col.replace('_', ' ').title(), opcoes, index=idx_sel, key=f"sel_{col}_{index_real}")
+                
+                elif "observacoes" in col.lower() or len(str(valor_atual)) > 50:
+                    novos_dados[col] = st.text_area(col.replace('_', ' ').title(), value=str(valor_atual), key=f"txt_{col}_{index_real}")
+                
+                else:
+                    novos_dados[col] = st.text_input(col.replace('_', ' ').title(), value=str(valor_atual), key=f"inp_{col}_{index_real}")
+
+            col_s1, col_s2 = st.columns(2)
+            if col_s1.button("Salvar Alteracoes", type="primary", use_container_width=True):
+                for k, v in novos_dados.items():
+                    df_completo.at[index_real, k] = v
+                
+                try:
+                    conn.update(worksheet=nome_planilha, data=df_completo)
+                    st.toast("Registro atualizado com sucesso!")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Erro ao salvar: {e}")
+
+        @st.dialog("Confirmar Exclusao")
+        def dialog_excluir(index_real, df_completo, nome_planilha):
+            st.warning("Tem certeza que deseja excluir este registro? Esta acao nao pode ser desfeita.")
+            st.write(f"**Registro:** {df_completo.at[index_real, 'obra']} - {df_completo.at[index_real, 'timestamp']}")
+            
+            col_del1, col_del2 = st.columns(2)
+            if col_del1.button("Sim, Excluir", type="primary", use_container_width=True):
+                try:
+                    df_final = df_completo.drop(index_real)
+                    conn.update(worksheet=nome_planilha, data=df_final)
+                    st.toast("Registro excluido com sucesso!")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Erro ao excluir: {e}")
+            
+            if col_del2.button("Cancelar", use_container_width=True):
+                st.rerun()
+
+        col_f1, col_view = st.columns([2, 1])
+        form_ref = col_f1.selectbox("Selecione o Formulario", list(abas_map.keys()))
         
-        df_acompanhamento = conn.read(worksheet=abas_map[form_ref], ttl=0)
-        
-        if not df_acompanhamento.empty:
-            obras_lista = sorted(df_acompanhamento["obra"].unique())
-            auditores_lista = sorted(df_acompanhamento["auditor"].unique())
+        nome_worksheet = abas_map[form_ref]
+        df_acompanhamento = conn.read(worksheet=nome_worksheet, ttl=0)
+
+        if df_acompanhamento.empty:
+            st.info("Nenhum dado encontrado.")
+        else:
+            col_f2, col_f3 = st.columns(2)
+            obras_lista = sorted(df_acompanhamento["obra"].unique()) if "obra" in df_acompanhamento.columns else []
+            auditores_lista = sorted(df_acompanhamento["auditor"].unique()) if "auditor" in df_acompanhamento.columns else []
             
             obra_f = col_f2.multiselect("Filtrar por Obra", options=obras_lista)
             auditor_f = col_f3.multiselect("Filtrar por Auditor", options=auditores_lista)
     
+            df_view = df_acompanhamento.copy()
             if obra_f:
-                df_acompanhamento = df_acompanhamento[df_acompanhamento["obra"].isin(obra_f)]
+                df_view = df_view[df_view["obra"].isin(obra_f)]
             if auditor_f:
-                df_acompanhamento = df_acompanhamento[df_acompanhamento["auditor"].isin(auditor_f)]
-    
-        modo_visao = option_menu(None, ["Cards", "Tabela"], 
-            icons=['grid-3x3-gap', 'table'], 
-            default_index=0, orientation="horizontal",
-            styles={
-                "container": {
-                    "padding": "0!important", 
-                    "background-color": "transparent",
-                    "width": "100%",     
-                    "max-width": "100%", 
-                    "margin": "0"        
-                },
-                "icon": {"color": "white", "font-size": "16px"}, 
-                "nav-link": {
-                    "font-size": "14px", 
-                    "text-align": "center", 
-                    "margin": "0px", 
-                    "--hover-color": "rgba(227, 112, 38, 0.3)",
-                    "color": "ffffff"
-                },
-                "nav-link-selected": {"background-color": "#E37026", "color": "white"},
-            }
-        )
-    
-        if df_acompanhamento.empty:
-            st.info("Nenhum dado encontrado")
-        elif modo_visao == "Tabela":
-            st.dataframe(df_acompanhamento, use_container_width=True)
-        else:
-            for index, row in df_acompanhamento.reset_index().iterrows():
-                with st.container():
-                    conteudo_card = ""
-                    for col in df_acompanhamento.columns:
-                        val = row[col]
-                        if pd.isna(val): val = "-"
-                        conteudo_card += f"<div style='margin-bottom: 4px;'><b>{col.replace('_', ' ').title()}:</b> {val}</div>"
-    
-                    st.markdown(f"""
-                    <div style="background: rgba(255,255,255,0.03); padding: 25px; border-radius: 15px; border: 1px solid rgba(227, 112, 38, 0.3); border-left: 8px solid #E37026; margin-bottom: 20px; line-height: 1.6;">
-                        <div style="color:#E37026; font-size: 1.2rem; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid rgba(227, 112, 38, 0.2); padding-bottom: 10px;">
-                            REGISTRO {index + 1} - {row.get('obra', 'OBRA NÃO IDENTIFICADA')}
+                df_view = df_view[df_view["auditor"].isin(auditor_f)]
+
+            modo_visao = option_menu(None, ["Cards", "Tabela"], 
+                icons=['grid-3x3-gap', 'table'], 
+                default_index=0, orientation="horizontal",
+                styles={
+                    "container": {"padding": "0!important", "background-color": "transparent"},
+                    "icon": {"color": "white", "font-size": "16px"}, 
+                    "nav-link": {"font-size": "14px", "text-align": "center", "margin": "0px", "color": "ffffff"},
+                    "nav-link-selected": {"background-color": "#E37026", "color": "white"},
+                }
+            )
+
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            if modo_visao == "Tabela":
+                st.dataframe(df_view, use_container_width=True)
+            else:
+                if df_view.empty:
+                    st.warning("Nenhum registro com os filtros selecionados.")
+                
+                for index, row in df_view.iterrows():
+                    with st.container():
+                        conteudo_card = ""
+                        for col in df_view.columns:
+                            val = row[col]
+                            if pd.isna(val) or val == "": val = "-"
+                            if len(str(val)) > 100: val = str(val)[:100] + "..."
+                            
+                            conteudo_card += f"<div style='margin-bottom: 4px;'><span style='color: #E37026; font-weight:600;'>{col.replace('_', ' ').title()}:</span> <span style='color: #ddd;'>{val}</span></div>"
+        
+                        st.markdown(f"""
+                        <div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; border: 1px solid rgba(227, 112, 38, 0.2); margin-bottom: 10px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 10px;">
+                                <span style="font-weight: bold; font-size: 1.1rem; color: #E37026;">{row.get('obra', 'OBRA')}</span>
+                                <span style="font-size: 0.8rem; color: #888;">{row.get('timestamp', '')}</span>
+                            </div>
+                            <div style="font-size: 0.9rem; margin-bottom: 15px;">
+                                {conteudo_card}
+                            </div>
                         </div>
-                        <div style="font-size: 0.85rem; color: #e0e0e0;">
-                            {conteudo_card}
-                        </div>
-                    </div>
-                    """, unsafe_allow_html=True)
+                        """, unsafe_allow_html=True)
+                        
+                        c_edit, c_del, c_vazio = st.columns([1, 1, 3])
+                        
+                        if c_edit.button("Editar", key=f"btn_edit_{index}"):
+                            dialog_editar(index, row, df_acompanhamento, nome_worksheet)
+                            
+                        if c_del.button("Excluir", key=f"btn_del_{index}"):
+                            dialog_excluir(index, df_acompanhamento, nome_worksheet)
+                        
+                        st.markdown("---")
     
     elif escolha == "Dashboards":
         import plotly.express as px
