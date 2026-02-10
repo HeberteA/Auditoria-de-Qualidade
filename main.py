@@ -499,7 +499,15 @@ else:
                     novos_dados[col] = valor_atual
                     continue
 
-                if str(valor_atual) in ["Sim", "Não", "Não se aplica"]:
+                if col == "auditor":
+                    idx = auditores.index(valor_atual) if valor_atual in auditores else 0
+                    novos_dados[col] = st.selectbox("Auditor", auditores, index=idx, key=f"sel_aud_{index_real}")
+                
+                elif col == "obra":
+                    idx = obras.index(valor_atual) if valor_atual in obras else 0
+                    novos_dados[col] = st.selectbox("Obra", obras, index=idx, key=f"sel_obr_{index_real}")
+
+                elif str(valor_atual) in ["Sim", "Não", "Não se aplica"]:
                     opcoes = ["Sim", "Não", "Não se aplica"]
                     idx_sel = opcoes.index(valor_atual) if valor_atual in opcoes else 0
                     novos_dados[col] = st.selectbox(col.replace('_', ' ').title(), opcoes, index=idx_sel, key=f"sel_{col}_{index_real}")
@@ -524,7 +532,7 @@ else:
 
         @st.dialog("Confirmar Exclusao")
         def dialog_excluir(index_real, df_completo, nome_planilha):
-            st.warning("Tem certeza que deseja excluir este registro? Esta acao nao pode ser desfeita.")
+            st.info("Tem certeza que deseja excluir este registro? Esta acao nao pode ser desfeita.")
             st.write(f"**Registro:** {df_completo.at[index_real, 'obra']} - {df_completo.at[index_real, 'timestamp']}")
             
             col_del1, col_del2 = st.columns(2)
@@ -540,8 +548,7 @@ else:
             if col_del2.button("Cancelar", use_container_width=True):
                 st.rerun()
 
-        col_f1, col_view = st.columns([2, 1])
-        form_ref = col_f1.selectbox("Selecione o Formulario", list(abas_map.keys()))
+        form_ref = st.selectbox("Selecione o Formulario", list(abas_map.keys()))
         
         nome_worksheet = abas_map[form_ref]
         df_acompanhamento = conn.read(worksheet=nome_worksheet, ttl=0)
@@ -566,9 +573,21 @@ else:
                 icons=['grid-3x3-gap', 'table'], 
                 default_index=0, orientation="horizontal",
                 styles={
-                    "container": {"padding": "0!important", "background-color": "transparent"},
+                    "container": {
+                        "padding": "0!important", 
+                        "background-color": "transparent",
+                        "width": "100%",     
+                        "max-width": "100%", 
+                        "margin": "0"        
+                    },
                     "icon": {"color": "white", "font-size": "16px"}, 
-                    "nav-link": {"font-size": "14px", "text-align": "center", "margin": "0px", "color": "ffffff"},
+                    "nav-link": {
+                        "font-size": "14px", 
+                        "text-align": "center", 
+                        "margin": "0px", 
+                        "--hover-color": "rgba(227, 112, 38, 0.3)",
+                        "color": "ffffff"
+                    },
                     "nav-link-selected": {"background-color": "#E37026", "color": "white"},
                 }
             )
@@ -603,12 +622,12 @@ else:
                         </div>
                         """, unsafe_allow_html=True)
                         
-                        c_edit, c_del, c_vazio = st.columns([1, 1, 3])
+                        c_edit, c_del = st.columns([1, 1])
                         
-                        if c_edit.button("Editar", key=f"btn_edit_{index}"):
+                        if c_edit.button("Editar", key=f"btn_edit_{index}", use_container_width=True):
                             dialog_editar(index, row, df_acompanhamento, nome_worksheet)
                             
-                        if c_del.button("Excluir", key=f"btn_del_{index}"):
+                        if c_del.button("Excluir", key=f"btn_del_{index}", use_container_width=True):
                             dialog_excluir(index, df_acompanhamento, nome_worksheet)
                         
                         st.markdown("---")
