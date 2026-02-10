@@ -622,7 +622,7 @@ else:
                         </div>
                         """, unsafe_allow_html=True)
                         
-                        c_edit, c_del = st.columns([1, 1])
+                        c_edit, c_del = st.columns([2, 1])
                         
                         if c_edit.button("Editar", key=f"btn_edit_{index}", use_container_width=True):
                             dialog_editar(index, row, df_acompanhamento, nome_worksheet)
