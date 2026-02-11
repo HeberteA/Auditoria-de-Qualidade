@@ -436,22 +436,28 @@ else:
             q10 = st.radio("O colaborador foi treinado na NR35 (Trabalho em altura)?", sim_nao_na, horizontal=True)
             obs = st.text_area("Observações importantes")
             if st.form_submit_button("SALVAR", use_container_width=True, type="primary"):
-                url_drive = ""
+                imagem_string_final = ""
                 if img_file is not None:
-                    with st.spinner("Enviando imagem para o Drive..."):
-                        timestamp_nome = datetime.now().strftime("%Y%m%d_%H%M%S")
-                        nome_arquivo = f"{obr}_{nome}_{timestamp_nome}.jpg"
-                        url_drive = salvar_no_drive(img_file, nome_arquivo)
-                        if url_drive:
-                            st.success("Imagem salva no Drive!")
-                        else:
-                            st.warning("Imagem não pode ser salva, mas os dados seguirão.")
+                    try:
+                        from PIL import Image
+                        import io
+                        image = Image.open(img_file)
+                        image.thumbnail((600, 600))
+                        if image.mode in ("RGBA", "P"):
+                            image = image.convert("RGB")
+                        buffered = io.BytesIO()
+                        image.save(buffered, format="JPEG", quality=50)
+                        img_str = base64.b64encode(buffered.getvalue()).decode()
+                        imagem_string_final = f"data:image/jpeg;base64,{img_str}"
+                        
+                    except Exception as e:
+                        st.error(f"Erro ao processar imagem: {e}")
 
                 df_old = conn.read(worksheet="auditoria_seg_externo", ttl=0)
                 novo_dado = pd.DataFrame([{
                     "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "auditor": aud, "obra": obr,
                     "fornecedor": forn, "colaborador_nome": colab, "cargo": cargo, "pcmso_valido": q1,
-                    "art_servico": q2, "ficha_epi": q3, "uso_epi_adequado": q4, "url_imagem_epi": url_drive,  "quais_epis_uso": epis, "aso_validade": q5,
+                    "art_servico": q2, "ficha_epi": q3, "uso_epi_adequado": q4, "url_imagem_epi": imagem_string_final,  "quais_epis_uso": epis, "aso_validade": q5,
                     "os_assinada": q6, "treino_nr06": q7, "treino_nr12": q8, "treino_nr18": q9,
                     "treino_nr35": q10, "observacoes": obs 
                 }])
@@ -480,16 +486,22 @@ else:
             q10 = st.radio("O colaborador foi treinado na NR35 (Trabalho em altura)?", sim_nao_na, horizontal=True)
             obs = st.text_area("Observações importantes")
             if st.form_submit_button("SALVAR", use_container_width=True, type="primary"):
-                url_drive = ""
+                imagem_string_final = ""
                 if img_file is not None:
-                    with st.spinner("Enviando imagem para o Drive..."):
-                        timestamp_nome = datetime.now().strftime("%Y%m%d_%H%M%S")
-                        nome_arquivo = f"{obr}_{nome}_{timestamp_nome}.jpg"
-                        url_drive = salvar_no_drive(img_file, nome_arquivo)
-                        if url_drive:
-                            st.success("Imagem salva no Drive!")
-                        else:
-                            st.warning("Imagem não pode ser salva, mas os dados seguirão.")
+                    try:
+                        from PIL import Image
+                        import io
+                        image = Image.open(img_file)
+                        image.thumbnail((600, 600))
+                        if image.mode in ("RGBA", "P"):
+                            image = image.convert("RGB")
+                        buffered = io.BytesIO()
+                        image.save(buffered, format="JPEG", quality=50)
+                        img_str = base64.b64encode(buffered.getvalue()).decode()
+                        imagem_string_final = f"data:image/jpeg;base64,{img_str}"
+                        
+                    except Exception as e:
+                        st.error(f"Erro ao processar imagem: {e}")
 
                 df_old = conn.read(worksheet="auditoria_seg_interno", ttl=0)
                 novo_dado = pd.DataFrame([{
@@ -499,7 +511,7 @@ else:
                     "colaborador_nome": nome, 
                     "cargo": cargo, 
                     "uso_epi_adequado": q1, 
-                    "url_imagem_epi": url_drive, 
+                    "url_imagem_epi": imagem_string_final,
                     "ficha_epi_pgr": q2, 
                     "quais_epis_uso": epis, 
                     "ponto_batido": q3, 
@@ -514,7 +526,7 @@ else:
                 }])
                 df_final = pd.concat([df_old, novo_dado], ignore_index=True)
                 conn.update(worksheet="auditoria_seg_interno", data=df_final)
-                st.success("Formulário salvo com sucesso!")
+                st.success("Salvo com sucesso!")
                 
     elif escolha == "Qualidade":
         st.header("SETOR DE QUALIDADE", divider="orange")
