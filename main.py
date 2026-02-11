@@ -5,6 +5,11 @@ import pandas as pd
 from datetime import datetime
 import base64
 import os
+from PIL import Image
+import io
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseUpload
 
 st.set_page_config(
     page_title="Auditoria de Qualidade",
@@ -17,6 +22,34 @@ def get_base64_image(image_path):
         return None
     with open(image_path, "rb") as img_file:
         return base64.b64encode(img_file.read()).decode()
+
+def salvar_no_drive(file_obj, filename):
+    try:
+        pasta_id = st.secrets["drive"]["folder_id"]
+        creds_dict = dict(st.secrets["connections"]["gsheets"])
+        
+        scope = ['https://www.googleapis.com/auth/drive']
+        creds = service_account.Credentials.from_service_account_info(creds_dict, scopes=scope)
+        service = build('drive', 'v3', credentials=creds)
+
+        file_metadata = {
+            'name': filename,
+            'parents': [pasta_id]
+        }
+        
+        media = MediaIoBaseUpload(file_obj, mimetype=file_obj.type)
+        
+        file = service.files().create(
+            body=file_metadata,
+            media_body=media,
+            fields='id, webViewLink'
+        ).execute()
+        
+        return file.get('webViewLink')
+        
+    except Exception as e:
+        st.error(f"Erro ao conectar no Drive: {e}")
+        return None
 
 st.markdown(f"""
     <style>
@@ -155,7 +188,7 @@ if not st.session_state.autenticado:
 else:
     conn = st.connection("gsheets", type=GSheetsConnection)
     auditores = ["Henrique Rodrigues", "Bianca Morais", "Gabriel Alves"]
-    obras = ["Arc Space", "Burj Lavie", "Lavie Camboinha", "JCarlos"]
+    obras = ["Arc Space", "Burj Lavie", "Lavie Camboinha", "JCarlos", "The Well", "Lavie Areia Dourada", "Lavie Tower", "Burj Lavie 02", "Lavie Camboinha 02", "Lavie Tambauzinho"]
     sim_nao = ["Sim", "Não"]
     sim_nao_na = ["Sim", "Não", "Não se aplica"]
 
@@ -393,6 +426,8 @@ else:
             q2 = st.radio("Há ART (Anotação de responsabilidade técnica) de execução do serviço?", sim_nao_na, horizontal=True)
             q3 = st.radio("O colaborador tem ficha de entrega de EPI atualizada (Equipamento de proteção individual) de acordo com o PGR?", sim_nao, horizontal=True)
             q4 = st.radio("O colaborador está usando EPI's adequdamente?", sim_nao, horizontal=True)
+            img_file = st.file_uploader("Imagem de colaborador: Mostrar EPI's em uso", type=["jpg", "png", "jpeg"])
+            epis = st.text_input("Quais os EPI's que o colaborador está usando?")
             q5 = st.radio("O colaborador possui ASO (Atestado de Saúde Ocupacional) e periódicos dentro do período de validade?", sim_nao, horizontal=True)
             q6 = st.radio("Solicitar a técnica de segurança a OS (Ordem de serviço) para o serviço em execução. Há OS assinada?", sim_nao, horizontal=True)
             q7 = st.radio("O colaborador foi treinado na NR06 (Equipamento de proteção individual)?", sim_nao_na, horizontal=True)
@@ -401,13 +436,24 @@ else:
             q10 = st.radio("O colaborador foi treinado na NR35 (Trabalho em altura)?", sim_nao_na, horizontal=True)
             obs = st.text_area("Observações importantes")
             if st.form_submit_button("SALVAR", use_container_width=True, type="primary"):
+                url_drive = ""
+                if img_file is not None:
+                    with st.spinner("Enviando imagem para o Drive..."):
+                        timestamp_nome = datetime.now().strftime("%Y%m%d_%H%M%S")
+                        nome_arquivo = f"{obr}_{nome}_{timestamp_nome}.jpg"
+                        url_drive = salvar_no_drive(img_file, nome_arquivo)
+                        if url_drive:
+                            st.success("Imagem salva no Drive!")
+                        else:
+                            st.warning("Imagem não pode ser salva, mas os dados seguirão.")
+
                 df_old = conn.read(worksheet="auditoria_seg_externo", ttl=0)
                 novo_dado = pd.DataFrame([{
                     "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "auditor": aud, "obra": obr,
                     "fornecedor": forn, "colaborador_nome": colab, "cargo": cargo, "pcmso_valido": q1,
-                    "art_servico": q2, "ficha_epi": q3, "uso_epi_adequado": q4, "aso_validade": q5,
+                    "art_servico": q2, "ficha_epi": q3, "uso_epi_adequado": q4, "url_imagem_epi": url_drive,  "quais_epis_uso": epis, "aso_validade": q5,
                     "os_assinada": q6, "treino_nr06": q7, "treino_nr12": q8, "treino_nr18": q9,
-                    "treino_nr35": q10, "observacoes": obs
+                    "treino_nr35": q10, "observacoes": obs 
                 }])
                 df_final = pd.concat([df_old, novo_dado], ignore_index=True)
                 conn.update(worksheet="auditoria_seg_externo", data=df_final)
@@ -421,7 +467,7 @@ else:
             nome = st.text_input("Nome de colaborador (Inserir nome completo)")
             cargo = st.text_input("Cargo")
             q1 = st.radio("O colaborador está usando os EPI's adequadamente?", sim_nao, horizontal=True)
-            st.file_uploader("Imagem de colaborador: Mostrar EPI's em uso", type=["jpg", "png", "jpeg"])
+            img_file = st.file_uploader("Imagem de colaborador: Mostrar EPI's em uso", type=["jpg", "png", "jpeg"])
             q2 = st.radio("O colaborador tem ficha de entrega de EPI de acordo com o PGR", sim_nao, horizontal=True)
             epis = st.text_input("Quais os EPI's que o colaborador está usando?")
             q3 = st.radio("Solicitar o registro de batida de ponto no dia da auditoria. O colaborador bateu o ponto?", sim_nao, horizontal=True)
@@ -434,18 +480,42 @@ else:
             q10 = st.radio("O colaborador foi treinado na NR35 (Trabalho em altura)?", sim_nao_na, horizontal=True)
             obs = st.text_area("Observações importantes")
             if st.form_submit_button("SALVAR", use_container_width=True, type="primary"):
+                url_drive = ""
+                if img_file is not None:
+                    with st.spinner("Enviando imagem para o Drive..."):
+                        timestamp_nome = datetime.now().strftime("%Y%m%d_%H%M%S")
+                        nome_arquivo = f"{obr}_{nome}_{timestamp_nome}.jpg"
+                        url_drive = salvar_no_drive(img_file, nome_arquivo)
+                        if url_drive:
+                            st.success("Imagem salva no Drive!")
+                        else:
+                            st.warning("Imagem não pode ser salva, mas os dados seguirão.")
+
                 df_old = conn.read(worksheet="auditoria_seg_interno", ttl=0)
                 novo_dado = pd.DataFrame([{
-                    "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "auditor": aud, "obra": obr,
-                    "colaborador_nome": nome, "cargo": cargo, "uso_epi_adequado": q1, "url_imagem_epi": "",
-                    "ficha_epi_pgr": q2, "quais_epis_uso": epis, "ponto_batido": q3, "aso_validade": q4,
-                    "cesta_basica": q5, "os_assinada": q6, "treino_nr06": q7, "treino_nr12": q8,
-                    "treino_nr18": q9, "treino_nr35": q10, "observacoes": obs
+                    "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S"), 
+                    "auditor": aud, 
+                    "obra": obr,
+                    "colaborador_nome": nome, 
+                    "cargo": cargo, 
+                    "uso_epi_adequado": q1, 
+                    "url_imagem_epi": url_drive, 
+                    "ficha_epi_pgr": q2, 
+                    "quais_epis_uso": epis, 
+                    "ponto_batido": q3, 
+                    "aso_validade": q4,
+                    "cesta_basica": q5, 
+                    "os_assinada": q6, 
+                    "treino_nr06": q7, 
+                    "treino_nr12": q8,
+                    "treino_nr18": q9, 
+                    "treino_nr35": q10, 
+                    "observacoes": obs
                 }])
                 df_final = pd.concat([df_old, novo_dado], ignore_index=True)
                 conn.update(worksheet="auditoria_seg_interno", data=df_final)
-                st.success("Salvo com sucesso!")
-
+                st.success("Formulário salvo com sucesso!")
+                
     elif escolha == "Qualidade":
         st.header("SETOR DE QUALIDADE", divider="orange")
         with st.form("form_qual"):
