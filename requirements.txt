@@ -3,3 +3,5 @@ streamlit-option-menu
 st-gsheets-connection
 pandas
 plotly
+google-api-python-client
+google-auth
