@@ -787,19 +787,16 @@ else:
         
                         st.markdown(f"""
                         <div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; border: 1px solid rgba(227, 112, 38, 0.2); margin-bottom: 10px;">
-                            
                             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 15px;">
                                 <span style="font-weight: bold; font-size: 1.1rem; color: #E37026;">{row.get('obra', 'OBRA')}</span>
                                 <span style="font-size: 0.8rem; color: #888;">{row.get('timestamp', '')}</span>
                             </div>
-                            
                             <div style="display: flex; gap: 20px; align-items: flex-start;">
                                 <div style="flex: 1; min-width: 0; font-size: 0.9rem;">
                                     {conteudo_texto}
                                 </div>
                                 {img_html}
                             </div>
-                            
                         </div>
                         """, unsafe_allow_html=True)
                         
