@@ -569,7 +569,7 @@ else:
         def gerar_relatorio_pdf(df, titulo_relatorio):
             class PDF(FPDF):
                 def header(self):
-                    try: pdf.image("assets/logo.png", x=15, y=15, w=55)
+                    try: pdf.image("assets/logo.png", x=10, y=5, w=55)
                     except: pass 
                     self.set_font('Arial', 'B', 15)
                     self.cell(0, 10, f'Relatorio: {titulo_relatorio}', 0, 1, 'C')
