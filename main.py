@@ -747,7 +747,7 @@ else:
 
             if modo_visao == "Tabela":
                 st.dataframe(df_view, use_container_width=True)
-                if st.button("Gerar Relatório PDF", use_container_width=True, type="primary"):
+                if st.button("Gerar Relatório PDF", use_container_width=True):
                     if df_view.empty:
                         st.warning("Não há dados para gerar o relatório.")
                     else:
@@ -758,7 +758,8 @@ else:
                                 data=pdf_bytes,
                                 file_name=f"relatorio_{form_ref}_{datetime.now().strftime('%Y%m%d')}.pdf",
                                 mime="application/pdf",
-                                type="primary"
+                                type="primary",
+                                use_container_width=True
                             )
             else:
                 if df_view.empty:
@@ -769,27 +770,36 @@ else:
                         img_html = ""
                         img_data = row.get('url_imagem_epi', '')
                         if pd.notna(img_data) and str(img_data).startswith('data:image'):
-                            img_html = f'<img src="{img_data}" style="width: 100%; max-width: 400px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #333; display: block;">'
+                            img_html = f"""
+                            <div style="flex: 0 0 150px; display: flex; align-items: flex-start; justify-content: center;">
+                                <img src="{img_data}" style="width: 140px; height: 140px; object-fit: cover; border-radius: 8px; border: 1px solid #444;">
+                            </div>
+                            """
 
-                        conteudo_card = ""
+                        conteudo_texto = ""
                         for col in df_view.columns:
                             val = row[col]
                             if pd.isna(val) or val == "": val = "-"
                             if col == 'url_imagem_epi': continue 
                             if len(str(val)) > 100: val = str(val)[:100] + "..."
                             
-                            conteudo_card += f"<div style='margin-bottom: 4px;'><span style='color: #E37026; font-weight:600;'>{col.replace('_', ' ').title()}:</span> <span style='color: #ddd;'>{val}</span></div>"
+                            conteudo_texto += f"<div style='margin-bottom: 4px;'><span style='color: #E37026; font-weight:600;'>{col.replace('_', ' ').title()}:</span> <span style='color: #ddd;'>{val}</span></div>"
         
                         st.markdown(f"""
                         <div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; border: 1px solid rgba(227, 112, 38, 0.2); margin-bottom: 10px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 10px;">
+                            
+                            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 15px;">
                                 <span style="font-weight: bold; font-size: 1.1rem; color: #E37026;">{row.get('obra', 'OBRA')}</span>
                                 <span style="font-size: 0.8rem; color: #888;">{row.get('timestamp', '')}</span>
                             </div>
-                            {img_html}
-                            <div style="font-size: 0.9rem; margin-bottom: 15px;">
-                                {conteudo_card}
+                            
+                            <div style="display: flex; gap: 20px; align-items: flex-start;">
+                                <div style="flex: 1; min-width: 0; font-size: 0.9rem;">
+                                    {conteudo_texto}
+                                </div>
+                                {img_html}
                             </div>
+                            
                         </div>
                         """, unsafe_allow_html=True)
                         
