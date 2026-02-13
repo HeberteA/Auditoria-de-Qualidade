@@ -569,6 +569,8 @@ else:
         def gerar_relatorio_pdf(df, titulo_relatorio):
             class PDF(FPDF):
                 def header(self):
+                    try: pdf.image("assets/logo.png", x=10, y=5, w=35)
+                    except: pass 
                     self.set_font('Arial', 'B', 15)
                     self.cell(0, 10, f'Relatorio: {titulo_relatorio}', 0, 1, 'C')
                     self.ln(10)
@@ -645,9 +647,8 @@ else:
                     novos_dados[col] = valor_atual
                     continue
                 
-                # Logica para imagem (apenas exibe aviso que não edita por aqui)
                 if col == "url_imagem_epi":
-                    novos_dados[col] = valor_atual # Mantém a antiga
+                    novos_dados[col] = valor_atual 
                     continue
 
                 if col == "auditor":
