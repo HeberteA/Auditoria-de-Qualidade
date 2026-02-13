@@ -772,7 +772,7 @@ else:
                         if pd.notna(img_data) and str(img_data).startswith('data:image'):
                             img_html = f"""
                             <div style="flex: 0 0 150px; display: flex; align-items: flex-start; justify-content: center;">
-                                <img src="{img_data}" style="width: 250px; height: 500px; object-fit: cover; border-radius: 8px; border: 1px solid #444;">
+                                <img src="{img_data}" style="width: 300px; height: 500px; object-fit: cover; border-radius: 8px; border: 1px solid #444;">
                             </div>
                             """
 
