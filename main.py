@@ -7,6 +7,8 @@ import base64
 import os
 from PIL import Image
 import io
+from fpdf import FPDF
+import tempfile
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
@@ -564,6 +566,68 @@ else:
             "Seg. Interno": "auditoria_seg_interno",
             "Qualidade": "auditoria_qualidade"
         }
+        def gerar_relatorio_pdf(df, titulo_relatorio):
+            class PDF(FPDF):
+                def header(self):
+                    self.set_font('Arial', 'B', 15)
+                    self.cell(0, 10, f'Relatorio: {titulo_relatorio}', 0, 1, 'C')
+                    self.ln(10)
+                
+                def footer(self):
+                    self.set_y(-15)
+                    self.set_font('Arial', 'I', 8)
+                    self.cell(0, 10, f'Pagina {self.page_no()}', 0, 0, 'C')
+
+            pdf = PDF()
+            pdf.add_page()
+            pdf.set_font("Arial", size=10)
+
+            for index, row in df.iterrows():
+                pdf.set_font("Arial", "B", 12)
+                pdf.set_fill_color(230, 230, 230)
+                obra_txt = str(row.get('obra', 'N/A')).encode('latin-1', 'replace').decode('latin-1')
+                data_txt = str(row.get('timestamp', 'N/A')).encode('latin-1', 'replace').decode('latin-1')
+                pdf.cell(0, 10, f"Obra: {obra_txt} - Data: {data_txt}", 1, 1, 'L', fill=True)
+                pdf.ln(2)
+                
+                pdf.set_font("Arial", size=10)
+                
+                for col in df.columns:
+                    if col in ['url_imagem_epi', 'timestamp', 'obra']: 
+                        continue
+                        
+                    valor = str(row[col]).encode('latin-1', 'replace').decode('latin-1')
+                    col_nome = col.replace('_', ' ').title().encode('latin-1', 'replace').decode('latin-1')
+                    
+                    pdf.set_font("Arial", "B", 10)
+                    pdf.cell(50, 6, f"{col_nome}:", 0, 0)
+                    pdf.set_font("Arial", "", 10)
+                    pdf.multi_cell(0, 6, f"{valor}")
+                
+                if 'url_imagem_epi' in df.columns:
+                    img_data = row.get('url_imagem_epi')
+                    if pd.notna(img_data) and str(img_data).startswith('data:image'):
+                        try:
+                            header, encoded = str(img_data).split(",", 1)
+                            data = base64.b64decode(encoded)
+                            
+                            with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp_file:
+                                tmp_file.write(data)
+                                tmp_path = tmp_file.name
+                            
+                            pdf.ln(5)
+                            pdf.cell(0, 10, "Registro Fotografico:", 0, 1)
+                            pdf.image(tmp_path, w=100)
+                            pdf.ln(5)
+                            os.unlink(tmp_path) 
+                        except Exception as e:
+                            pdf.cell(0, 10, f"[Erro ao renderizar imagem: {str(e)}]", 0, 1)
+
+                pdf.ln(10)
+                pdf.line(10, pdf.get_y(), 200, pdf.get_y()) 
+                pdf.ln(10)
+
+            return pdf.output(dest='S').encode('latin-1')
         
         @st.dialog("Editar Registro")
         def dialog_editar(index_real, row_data, df_completo, nome_planilha):
@@ -579,6 +643,11 @@ else:
                 if col == "timestamp":
                     st.text_input(f"Data (Timestamp)", value=valor_atual, disabled=True, key=f"edit_{col}_{index_real}")
                     novos_dados[col] = valor_atual
+                    continue
+                
+                # Logica para imagem (apenas exibe aviso que não edita por aqui)
+                if col == "url_imagem_epi":
+                    novos_dados[col] = valor_atual # Mantém a antiga
                     continue
 
                 if col == "auditor":
@@ -611,7 +680,7 @@ else:
                     st.rerun()
                 except Exception as e:
                     st.error(f"Erro ao salvar: {e}")
-
+                    
         @st.dialog("Confirmar Exclusao")
         def dialog_excluir(index_real, df_completo, nome_planilha):
             st.info("Tem certeza que deseja excluir este registro? Esta acao nao pode ser desfeita.")
@@ -678,20 +747,40 @@ else:
 
             if modo_visao == "Tabela":
                 st.dataframe(df_view, use_container_width=True)
+                if st.button("Gerar Relatório PDF", use_container_width=True, type="prmary"):
+                    if df_view.empty:
+                        st.warning("Não há dados para gerar o relatório.")
+                    else:
+                        with st.spinner("Gerando PDF..."):
+                            pdf_bytes = gerar_relatorio_pdf(df_view, form_ref)
+                            st.download_button(
+                                label="Baixar PDF",
+                                data=pdf_bytes,
+                                file_name=f"relatorio_{form_ref}_{datetime.now().strftime('%Y%m%d')}.pdf",
+                                mime="application/pdf",
+                                type="primary"
+                            )
             else:
                 if df_view.empty:
                     st.warning("Nenhum registro com os filtros selecionados.")
                 
                 for index, row in df_view.iterrows():
                     with st.container():
+                        img_data = row.get('url_imagem_epi', '')
+                        img_html = ""
+                        
+                        if pd.notna(img_data) and str(img_data).startswith('data:image'):
+                            st.image(str(img_data), caption="Registro Fotográfico", width=300)
+
                         conteudo_card = ""
                         for col in df_view.columns:
                             val = row[col]
                             if pd.isna(val) or val == "": val = "-"
+                            if col == 'url_imagem_epi': continue 
                             if len(str(val)) > 100: val = str(val)[:100] + "..."
                             
                             conteudo_card += f"<div style='margin-bottom: 4px;'><span style='color: #E37026; font-weight:600;'>{col.replace('_', ' ').title()}:</span> <span style='color: #ddd;'>{val}</span></div>"
-        
+                            
                         st.markdown(f"""
                         <div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; border: 1px solid rgba(227, 112, 38, 0.2); margin-bottom: 10px;">
                             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 10px;">
