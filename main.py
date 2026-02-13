@@ -792,11 +792,7 @@ else:
                                 <span style="font-size: 0.8rem; color: #888;">{row.get('timestamp', '')}</span>
                             </div>
                             <div style="display: flex; gap: 20px; align-items: flex-start;">
-                                <div style="flex: 1; min-width: 0; font-size: 0.9rem;">
-                                    {conteudo_texto}
-                                </div>
-                                {img_html}
-                            </div>
+                                <div style="flex: 1; min-width: 0; font-size: 0.9rem;">{conteudo_texto}</div>{img_html}</div>
                         </div>
                         """, unsafe_allow_html=True)
                         
