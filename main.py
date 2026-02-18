@@ -983,6 +983,55 @@ else:
         with c8: st.markdown(card("Auditor", top_auditor, "Maior volume de registros", ""), unsafe_allow_html=True)
     
         st.markdown("---")
+
+        st.subheader("Comparativo Geral: Obras x Setores")
+        
+        # Prepara os dados para o gráfico agrupado
+        dados_agrupados = []
+        for setor, df in all_data.items():
+            if not df.empty and 'obra' in df.columns:
+                for obra_nome in df['obra'].unique():
+                    # Calcula nota específica daquele setor naquela obra
+                    df_filtered = df[df['obra'] == obra_nome]
+                    score = calc_score(df_filtered)
+                    dados_agrupados.append({
+                        'Obra': obra_nome,
+                        'Setor': setor,
+                        'Conformidade': score
+                    })
+        
+        if dados_agrupados:
+            df_cluster = pd.DataFrame(dados_agrupados)
+            # Ordena para visualização consistente
+            df_cluster = df_cluster.sort_values(by=['Obra', 'Setor'])
+            
+            fig_cluster = px.bar(
+                df_cluster, 
+                x="Obra", 
+                y="Conformidade", 
+                color="Setor", 
+                barmode="group", # Isso cria o agrupamento (cluster)
+                text_auto='.1f',
+                template="plotly_dark",
+                color_discrete_sequence=px.colors.qualitative.Prism
+            )
+            
+            fig_cluster.update_layout(
+                yaxis_range=[0, 115], 
+                plot_bgcolor='rgba(0,0,0,0)', 
+                paper_bgcolor='rgba(0,0,0,0)',
+                legend_title="Setor",
+                xaxis_title="",
+                yaxis_title="Índice de Conformidade (%)",
+                height=500
+            )
+            fig_cluster.update_traces(textposition='outside')
+            st.plotly_chart(fig_cluster, use_container_width=True)
+        else:
+            st.info("Ainda não há dados suficientes cruzados entre Obras e Setores para gerar este gráfico.")
+
+        st.markdown("---")
+
         st.subheader("Visão Geral")
         
         st.markdown("##### Evolução Mensal de Conformidade")
