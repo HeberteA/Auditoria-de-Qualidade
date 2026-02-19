@@ -1092,58 +1092,95 @@ else:
             df_setor = all_data.get(setor_sel, pd.DataFrame())
             
             if not df_setor.empty:
-                cols_meta = ['timestamp', 'auditor', 'obra', 'observacoes', 'fornecedor', 'colaborador_nome', 'cargo', 'atividade_momento', 'local_servico', 'url_imagem_epi', 'quais_epis_uso', 'insumo_especifico', 'nf_numero', 'grupo_insumo', 'dt_mes']
-                qs = [c for c in df_setor.columns if c not in cols_meta]
-                item_scores = []
-                for q in qs:
-                    s = (df_setor[q].astype(str).str.strip().str.lower() == 'sim').sum()
-                    n = (df_setor[q].astype(str).str.strip().str.lower() == 'não').sum()
-                    if (s + n) > 0:
-                        perc = (s / (s + n) * 100)
-                        q_formatado = q.replace('_', ' ').title()
-                        item_scores.append({'Requisito': q_formatado, 'Conformidade': perc})
+                col_d1, col_d2 = st.columns(2)
                 
-                if item_scores:
+                with col_d1:
+                    st.markdown(f"**Conformidade por Obra ({setor_sel})**")
+                    conf_obra = []
+                    if 'obra' in df_setor.columns:
+                        for ob in df_setor['obra'].unique():
+                            val = calc_score(df_setor[df_setor['obra'] == ob])
+                            conf_obra.append({'Obra': ob, 'Conformidade': val})
+                        df_conf_ob = pd.DataFrame(conf_obra)
+                        fig_ob = px.bar(df_conf_ob, x='Obra', y='Conformidade', text_auto='.1f',
+                                       color='Conformidade', color_continuous_scale='RdBu', template="plotly_dark")
+                        fig_ob.update_traces(textposition='outside')
+                        fig_ob.update_layout(yaxis_range=[0, 115], plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
+                        st.plotly_chart(fig_ob, use_container_width=True)
+                
+                with col_d2:
                     st.markdown(f"**Ranking de Requisitos ({setor_sel})**")
-                    df_items = pd.DataFrame(item_scores).sort_values('Conformidade', ascending=True)
-                    fig_items = px.bar(df_items, y='Requisito', x='Conformidade', orientation='h', text_auto='.1f',
-                                      color='Conformidade', color_continuous_scale='RdBu', template="plotly_dark")
-                    fig_items.update_traces(textposition='outside')
-                    fig_items.update_layout(xaxis_range=[0, 115], plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', height=400)
-                    st.plotly_chart(fig_items, use_container_width=True)
+                    cols_meta = ['timestamp', 'auditor', 'obra', 'observacoes', 'fornecedor', 'colaborador_nome', 'cargo', 'atividade_momento', 'local_servico', 'url_imagem_epi', 'quais_epis_uso', 'insumo_especifico', 'nf_numero', 'grupo_insumo', 'dt_mes']
+                    qs = [c for c in df_setor.columns if c not in cols_meta]
+                    item_scores = []
+                    for q in qs:
+                        s = (df_setor[q].astype(str).str.strip().str.lower() == 'sim').sum()
+                        n = (df_setor[q].astype(str).str.strip().str.lower() == 'não').sum()
+                        if (s + n) > 0:
+                            perc = (s / (s + n) * 100)
+                            q_formatado = q.replace('_', ' ').title()
+                            item_scores.append({'Requisito': q_formatado, 'Conformidade': perc})
+                    
+                    if item_scores:
+                        df_items = pd.DataFrame(item_scores).sort_values('Conformidade', ascending=True)
+                        fig_items = px.bar(df_items, y='Requisito', x='Conformidade', orientation='h', text_auto='.1f',
+                                          color='Conformidade', color_continuous_scale='RdBu', template="plotly_dark")
+                        fig_items.update_traces(textposition='outside')
+                        fig_items.update_layout(xaxis_range=[0, 115], plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', height=400)
+                        st.plotly_chart(fig_items, use_container_width=True)
             else:
                 st.warning(f"Sem dados para o setor {setor_sel}.")
 
         with tab2:
             if obras_unicas:
                 obra_sel = st.selectbox("Selecione a Obra", obras_unicas, key="sb_obra")
+                col_e1, col_e2 = st.columns(2)
                 
-                resumo_reqs = []
-                cols_meta = ['timestamp', 'auditor', 'obra', 'observacoes', 'fornecedor', 'colaborador_nome', 'cargo', 'atividade_momento', 'local_servico', 'url_imagem_epi', 'quais_epis_uso', 'insumo_especifico', 'nf_numero', 'grupo_insumo', 'dt_mes']
-                
-                for df_s in all_data.values():
-                    if not df_s.empty and 'obra' in df_s.columns and obra_sel in df_s['obra'].values:
-                        df_filtrado = df_s[df_s['obra'] == obra_sel]
-                        qs = [c for c in df_filtrado.columns if c not in cols_meta]
-                        for q in qs:
-                            s = (df_filtrado[q].astype(str).str.strip().str.lower() == 'sim').sum()
-                            n = (df_filtrado[q].astype(str).str.strip().str.lower() == 'não').sum()
-                            if (s + n) > 0:
-                                q_formatado = q.replace('_', ' ').title()
-                                resumo_reqs.append({'Requisito': q_formatado, 'Sim': s, 'Nao': n})
-                
-                if resumo_reqs:
-                    st.markdown(f"**Ranking Geral de Requisitos - {obra_sel} (Top 15 Criticos)**")
-                    df_req_obra = pd.DataFrame(resumo_reqs).groupby('Requisito').sum().reset_index()
-                    df_req_obra['Conformidade'] = (df_req_obra['Sim'] / (df_req_obra['Sim'] + df_req_obra['Nao'])) * 100
-                    df_req_obra = df_req_obra.sort_values('Conformidade', ascending=True).head(15)
+                with col_e1:
+                    st.markdown(f"**Conformidade por Setor ({obra_sel})**")
+                    conf_setor_obra = []
+                    for nome_setor, df_s in all_data.items():
+                        if not df_s.empty and 'obra' in df_s.columns and obra_sel in df_s['obra'].values:
+                            val = calc_score(df_s[df_s['obra'] == obra_sel])
+                            conf_setor_obra.append({'Setor': nome_setor, 'Conformidade': val})
                     
-                    fig_req_ob = px.bar(df_req_obra, y='Requisito', x='Conformidade', orientation='h', text_auto='.1f',
+                    df_conf_so = pd.DataFrame(conf_setor_obra)
+                    if not df_conf_so.empty:
+                        fig_so = px.bar(df_conf_so, x='Setor', y='Conformidade', text_auto='.1f',
                                        color='Conformidade', color_continuous_scale='RdBu', template="plotly_dark")
-                    fig_req_ob.update_traces(textposition='outside')
-                    fig_req_ob.update_layout(xaxis_range=[0, 115], plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', height=500)
-                    st.plotly_chart(fig_req_ob, use_container_width=True)
-                else:
-                    st.info("Nenhum requisito avaliado para esta obra.")
+                        fig_so.update_traces(textposition='outside')
+                        fig_so.update_layout(yaxis_range=[0, 115], plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
+                        st.plotly_chart(fig_so, use_container_width=True)
+                    else:
+                        st.info("Esta obra nao possui registros em nenhum setor.")
+        
+                with col_e2:
+                    st.markdown(f"**Ranking Geral de Requisitos - {obra_sel} (Top 15 Criticos)**")
+                    resumo_reqs = []
+                    cols_meta = ['timestamp', 'auditor', 'obra', 'observacoes', 'fornecedor', 'colaborador_nome', 'cargo', 'atividade_momento', 'local_servico', 'url_imagem_epi', 'quais_epis_uso', 'insumo_especifico', 'nf_numero', 'grupo_insumo', 'dt_mes']
+                    
+                    for df_s in all_data.values():
+                        if not df_s.empty and 'obra' in df_s.columns and obra_sel in df_s['obra'].values:
+                            df_filtrado = df_s[df_s['obra'] == obra_sel]
+                            qs = [c for c in df_filtrado.columns if c not in cols_meta]
+                            for q in qs:
+                                s = (df_filtrado[q].astype(str).str.strip().str.lower() == 'sim').sum()
+                                n = (df_filtrado[q].astype(str).str.strip().str.lower() == 'não').sum()
+                                if (s + n) > 0:
+                                    q_formatado = q.replace('_', ' ').title()
+                                    resumo_reqs.append({'Requisito': q_formatado, 'Sim': s, 'Nao': n})
+                    
+                    if resumo_reqs:
+                        df_req_obra = pd.DataFrame(resumo_reqs).groupby('Requisito').sum().reset_index()
+                        df_req_obra['Conformidade'] = (df_req_obra['Sim'] / (df_req_obra['Sim'] + df_req_obra['Nao'])) * 100
+                        df_req_obra = df_req_obra.sort_values('Conformidade', ascending=True).head(15)
+                        
+                        fig_req_ob = px.bar(df_req_obra, y='Requisito', x='Conformidade', orientation='h', text_auto='.1f',
+                                           color='Conformidade', color_continuous_scale='RdBu', template="plotly_dark")
+                        fig_req_ob.update_traces(textposition='outside')
+                        fig_req_ob.update_layout(xaxis_range=[0, 115], plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', height=500)
+                        st.plotly_chart(fig_req_ob, use_container_width=True)
+                    else:
+                        st.info("Nenhum requisito avaliado para esta obra.")
             else:
                 st.warning("Nenhuma obra encontrada.")
