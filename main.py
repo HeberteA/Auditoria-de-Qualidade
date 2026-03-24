@@ -1069,29 +1069,26 @@ else:
                                 if not df_mes_ob.empty:
                                     score_mes_ob = calc_score(df_mes_ob)
                                     evo_obra_list.append({'Mes': mes, 'Obra': ob, 'Conformidade': score_mes_ob})
+    
         
-        col_g1, col_g2 = st.columns(2)
-        
-        with col_g1:
-            if evo_list:
-                df_evo = pd.DataFrame(evo_list).sort_values('Mes')
-                fig_evo = px.line(df_evo, x='Mes', y='Conformidade', color='Setor', markers=True,
-                                 template="plotly_dark", color_discrete_sequence=px.colors.qualitative.Prism)
-                fig_evo.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', yaxis_range=[0, 115])
-                st.plotly_chart(fig_evo, use_container_width=True)
-            else:
-                st.info("Dados insuficientes para gerar evolucao temporal por setor.")
+        if evo_list:
+            df_evo = pd.DataFrame(evo_list).sort_values('Mes')
+            fig_evo = px.line(df_evo, x='Mes', y='Conformidade', color='Setor', markers=True,
+                             template="plotly_dark", color_discrete_sequence=px.colors.qualitative.Prism)
+            fig_evo.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', yaxis_range=[0, 115])
+            st.plotly_chart(fig_evo, use_container_width=True)
+        else:
+            st.info("Dados insuficientes para gerar evolucao temporal por setor.")
 
-        with col_g2:
-            if evo_obra_list:
-                df_evo_ob = pd.DataFrame(evo_obra_list).groupby(['Mes', 'Obra'])['Conformidade'].mean().reset_index()
-                df_evo_ob = df_evo_ob.sort_values('Mes')
-                fig_evo_ob = px.line(df_evo_ob, x='Mes', y='Conformidade', color='Obra', markers=True,
-                                 template="plotly_dark", color_discrete_sequence=px.colors.qualitative.Pastel)
-                fig_evo_ob.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', yaxis_range=[0, 115])
-                st.plotly_chart(fig_evo_ob, use_container_width=True)
-            else:
-                st.info("Dados insuficientes para gerar evolucao temporal por obra.")
+        if evo_obra_list:
+            df_evo_ob = pd.DataFrame(evo_obra_list).groupby(['Mes', 'Obra'])['Conformidade'].mean().reset_index()
+            df_evo_ob = df_evo_ob.sort_values('Mes')
+            fig_evo_ob = px.line(df_evo_ob, x='Mes', y='Conformidade', color='Obra', markers=True,
+                             template="plotly_dark", color_discrete_sequence=px.colors.qualitative.Pastel)
+            fig_evo_ob.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', yaxis_range=[0, 115])
+            st.plotly_chart(fig_evo_ob, use_container_width=True)
+        else:
+            st.info("Dados insuficientes para gerar evolucao temporal por obra.")
     
         c1, c2 = st.columns([6, 4])
         
