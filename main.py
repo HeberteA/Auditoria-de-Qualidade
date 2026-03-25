@@ -843,7 +843,7 @@ else:
     
         escala_lavie = [[0, "rgb(139, 0, 0)"], [0.5, "rgb(0, 0, 0)"], [1, "rgb(0, 100, 0)"]]
     
-        ddef calc_score(df):
+        def calc_score(df):
             if df.empty: return 0.0
             cols_meta = ['timestamp', 'auditor', 'obra', 'observacoes', 'fornecedor', 'colaborador_nome', 'cargo', 'atividade_momento', 'local_servico', 'url_imagem_epi', 'quais_epis_uso', 'insumo_especifico', 'nf_numero', 'grupo_insumo', 'dt', 'dt_mes']
             cols_q = [c for c in df.columns if c not in cols_meta]
