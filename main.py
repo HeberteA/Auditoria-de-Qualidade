@@ -1252,5 +1252,3 @@ else:
                         st.info("Nenhum requisito avaliado para esta obra no período selecionado.")
             else:
                 st.warning("Nenhuma obra encontrada.")
-            else:
-                st.warning("Nenhuma obra encontrada.")
