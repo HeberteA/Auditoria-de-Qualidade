@@ -845,7 +845,7 @@ else:
             'timestamp', 'auditor', 'obra', 'observacoes', 'fornecedor', 
             'colaborador_nome', 'cargo', 'atividade_momento', 'local_servico', 
             'url_imagem_epi', 'quais_epis_uso', 'insumo_especifico', 'nf_numero', 
-            'grupo_insumo', 'dt', 'dt_mes', 'dt_obj'
+            'grupo_insumo', 'dt', 'dt_mes', 'dt_obj', 'data_limpa'
         ]
 
         def calc_score(df):
@@ -859,6 +859,24 @@ else:
             
             total = sim + nao
             return (sim / total * 100) if total > 0 else 0.0
+
+        # FUNÇÃO BLINDADA PARA CONVERTER QUALQUER DATA
+        def parse_data_robusta(d):
+            if pd.isna(d): return pd.NaT
+            if isinstance(d, (pd.Timestamp, datetime)): return pd.Timestamp(d)
+            d_str = str(d).strip()
+            
+            formatos = [
+                '%d/%m/%Y %H:%M:%S', '%d/%m/%Y %H:%M', '%d/%m/%Y',
+                '%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M', '%Y-%m-%d',
+                '%m/%d/%Y %H:%M:%S', '%m/%d/%Y %H:%M'
+            ]
+            for fmt in formatos:
+                try:
+                    return pd.to_datetime(d_str, format=fmt)
+                except ValueError:
+                    continue
+            return pd.to_datetime(d_str, errors='coerce', dayfirst=True)
 
         scores = {}
         total_audits = 0
@@ -877,24 +895,11 @@ else:
                 data = conn.read(worksheet=ws, ttl=0)
                 if not data.empty and 'timestamp' in data.columns:
                     
-                    # --- TRATAMENTO BLINDADO DE DATA ---
-                    data['dt_obj'] = pd.to_datetime(data['timestamp'], dayfirst=True, errors='coerce')
-                    
-                    if data['dt_obj'].isna().any():
-                        mask = data['dt_obj'].isna()
-                        data.loc[mask, 'dt_obj'] = pd.to_datetime(data.loc[mask, 'timestamp'], format='%d/%m/%Y %H:%M:%S', errors='coerce')
-                        
-                    if data['dt_obj'].isna().any():
-                        mask = data['dt_obj'].isna()
-                        data.loc[mask, 'dt_obj'] = pd.to_datetime(data.loc[mask, 'timestamp'], format='%d/%m/%Y %H:%M', errors='coerce')
-
-                    if data['dt_obj'].isna().any():
-                        mask = data['dt_obj'].isna()
-                        data.loc[mask, 'dt_obj'] = pd.to_datetime(data.loc[mask, 'timestamp'], format='%Y-%m-%d %H:%M:%S', errors='coerce')
+                    # Aplica a função blindada linha a linha
+                    data['dt_obj'] = data['timestamp'].apply(parse_data_robusta)
                     
                     data['dt_mes'] = data['dt_obj'].dt.to_period('M').astype(str)
                     data = data[data['dt_mes'] != 'NaT']
-                    # -----------------------------------
 
                     if not data.empty:
                         all_data[nome] = data
@@ -942,33 +947,9 @@ else:
 
         st.markdown("""
         <style>
-        .kpi-card {
-            background: linear-gradient(100deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
-            border: 1px solid rgba(227, 112, 38, 0.2);
-            border-radius: 10px;
-            padding: 10px;
-            position: relative;
-            overflow: hidden;
-            transition: transform 0.3s ease, border-color 0.3s ease;
-            height: 140px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-        .kpi-card:hover {
-            border-color: rgba(227, 112, 38, 0.6);
-            transform: translateY(-5px);
-            background: rgba(255, 255, 255, 0.05);
-        }
-        .kpi-card::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            background: #E37026;
-        }
+        .kpi-card { background: linear-gradient(100deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%); border: 1px solid rgba(227, 112, 38, 0.2); border-radius: 10px; padding: 10px; position: relative; overflow: hidden; transition: transform 0.3s ease, border-color 0.3s ease; height: 140px; display: flex; flex-direction: column; justify-content: space-between; }
+        .kpi-card:hover { border-color: rgba(227, 112, 38, 0.6); transform: translateY(-5px); background: rgba(255, 255, 255, 0.05); }
+        .kpi-card::before { content: ""; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: #E37026; }
         .kpi-title { color: #aaa; font-size: 0.75rem; font-weight: 450; text-transform: uppercase; letter-spacing: 1px; padding: 5px; }
         .kpi-value { color: #fff; font-size: 1.8rem; font-weight: 600; margin: 0px 0; padding: 5px; }
         .kpi-sub { color: rgba(255, 255, 255, 0.4); font-size: 0.75rem; padding: 5px; }
@@ -977,14 +958,7 @@ else:
         """, unsafe_allow_html=True)
     
         def card(title, value, sub, icon_char):
-            return f"""
-            <div class="kpi-card">
-                <div class="kpi-icon">{icon_char}</div>
-                <div class="kpi-title">{title}</div>
-                <div class="kpi-value">{value}</div>
-                <div class="kpi-sub">{sub}</div>
-            </div>
-            """
+            return f'<div class="kpi-card"><div class="kpi-icon">{icon_char}</div><div class="kpi-title">{title}</div><div class="kpi-value">{value}</div><div class="kpi-sub">{sub}</div></div>'
     
         c1, c2, c3, c4 = st.columns(4)
         with c1: st.markdown(card("Total Auditorias", total_audits, "Histórico completo", ""), unsafe_allow_html=True)
@@ -1009,18 +983,11 @@ else:
                 for obra_nome in df['obra'].dropna().unique():
                     df_filtered = df[df['obra'] == obra_nome]
                     score = calc_score(df_filtered)
-                    dados_agrupados.append({
-                        'Obra': obra_nome,
-                        'Setor': setor,
-                        'Conformidade': score
-                    })
+                    dados_agrupados.append({'Obra': obra_nome, 'Setor': setor, 'Conformidade': score})
         
         if dados_agrupados:
             df_cluster = pd.DataFrame(dados_agrupados).sort_values(by=['Obra', 'Setor'])
-            fig_cluster = px.bar(
-                df_cluster, x="Obra", y="Conformidade", color="Setor", barmode="group",
-                text_auto='.1f', template="plotly_dark", color_discrete_sequence=px.colors.qualitative.Prism
-            )
+            fig_cluster = px.bar(df_cluster, x="Obra", y="Conformidade", color="Setor", barmode="group", text_auto='.1f', template="plotly_dark", color_discrete_sequence=px.colors.qualitative.Prism)
             fig_cluster.update_layout(yaxis_range=[0, 115], plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', legend_title="Setor", xaxis_title="", yaxis_title="Índice de Conformidade (%)", height=500)
             fig_cluster.update_traces(textposition='outside')
             st.plotly_chart(fig_cluster, use_container_width=True)
