@@ -843,28 +843,18 @@ else:
     
         escala_lavie = [[0, "rgb(139, 0, 0)"], [0.5, "rgb(0, 0, 0)"], [1, "rgb(0, 100, 0)"]]
     
-        def calc_score(df):
+        ddef calc_score(df):
             if df.empty: return 0.0
-            cols_meta = [
-                'timestamp', 'auditor', 'obra', 'observacoes', 'fornecedor', 
-                'colaborador_nome', 'cargo', 'atividade_momento', 'local_servico', 
-                'url_imagem_epi', 'quais_epis_uso', 'insumo_especifico', 'nf_numero', 
-                'grupo_insumo', 'dt', 'dt_mes', 'dt_semana'
-            ]
-            
+            cols_meta = ['timestamp', 'auditor', 'obra', 'observacoes', 'fornecedor', 'colaborador_nome', 'cargo', 'atividade_momento', 'local_servico', 'url_imagem_epi', 'quais_epis_uso', 'insumo_especifico', 'nf_numero', 'grupo_insumo', 'dt', 'dt_mes']
             cols_q = [c for c in df.columns if c not in cols_meta]
-            
             if not cols_q: return 0.0
             
             vals = df[cols_q].astype(str).apply(lambda x: x.str.strip().str.lower())
-            
             sim = (vals == 'sim').sum().sum()
             nao = (vals.isin(['não', 'nao'])).sum().sum()
             
             total = sim + nao
-            if total == 0: return 0.0
-            
-            return (sim / total) * 100
+            return (sim / total * 100) if total > 0 else 0.0
     
         scores = {}
         total_audits = 0
@@ -873,44 +863,24 @@ else:
         auditor_counts = {}
         obras_scores = {}
         all_data = {}
-        
-        mes_atual_str = datetime.now().strftime("%Y-%m")
-    
+        meses_disponiveis = set()
+        obras_lista = set()
+
         for nome, ws in abas_map.items():
             try:
                 data = conn.read(worksheet=ws, ttl=0)
-                if data.empty:
-                    all_data[nome] = pd.DataFrame()
-                    scores[nome] = 0.0
-                else:
+                if not data.empty:
+                    # CORREÇÃO CRÍTICA: format='mixed' para aceitar horas com e sem segundos
+                    data['dt_obj'] = pd.to_datetime(data['timestamp'], dayfirst=True, errors='coerce', format='mixed')
+                    data['dt_mes'] = data['dt_obj'].dt.to_period('M').astype(str)
+                    
+                    # Remove linhas onde a data falhou (se houver alguma inválida real)
+                    data = data[data['dt_mes'] != 'NaT']
+                    
+                    meses_disponiveis.update(data['dt_mes'].dropna().unique())
+                    obras_lista.update(data['obra'].unique())
                     all_data[nome] = data
-                    scores[nome] = calc_score(data)
-                    total_audits += len(data)
-                    
-                    cols_meta = ['timestamp', 'auditor', 'obra', 'observacoes', 'fornecedor', 'colaborador_nome', 'cargo', 'atividade_momento', 'local_servico', 'url_imagem_epi', 'quais_epis_uso', 'insumo_especifico', 'nf_numero', 'grupo_insumo', 'dt', 'dt_mes']
-                    cols_q = [c for c in data.columns if c not in cols_meta]
-                    vals = data[cols_q].astype(str).apply(lambda x: x.str.strip().str.lower())
-                    total_nao_conformidades += (vals == 'não').sum().sum()
-    
-                    if 'timestamp' in data.columns:
-                        data['dt_mes'] = pd.to_datetime(data['timestamp'], dayfirst=True, errors='coerce').dt.to_period('M').astype(str)
-                        audits_mes_atual += len(data[data['dt_mes'] == mes_atual_str])
-    
-                    if 'auditor' in data.columns:
-                        vc = data['auditor'].value_counts().to_dict()
-                        for aud, count in vc.items():
-                            auditor_counts[aud] = auditor_counts.get(aud, 0) + count
-                    
-                    if 'obra' in data.columns:
-                        for ob in data['obra'].unique():
-                            s = calc_score(data[data['obra'] == ob])
-                            if ob not in obras_scores:
-                                obras_scores[ob] = []
-                            obras_scores[ob].append(s)
-    
-            except Exception:
-                all_data[nome] = pd.DataFrame()
-                scores[nome] = 0.0
+            except: all_data[nome] = pd.DataFrame()
     
         avg_score = sum(scores.values()) / len(scores) if scores else 0
         
