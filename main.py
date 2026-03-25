@@ -250,12 +250,25 @@ else:
                 df_old = conn.read(worksheet="auditoria_canteiro", ttl=0)
                 novo_dado = pd.DataFrame([{
                     "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
-                    "auditor": aud, "obra": obr, "epi_visitantes": q1, "kit_primeiros_socorros": q2,
-                    "sinalizacao_advertencia": q3, "placas_orientacao": q4, "areas_vivencia_limpeza": q5,
-                    "canteiro_limpeza": q6, "escadas_seguras": q7, "barreiras_guarda_corpo": q8,
-                    "protecao_queda_objetos": q9, "maquinas_equipamentos": q10, "instalacoes_provisorias": q11,
-                    "extintores_norma": q12, "escritorio_monitoramento": q13, "painel_gestao": q14,
-                    "diario_obra_atualizado": q15, "diario_obra_completo": q16, "plano_semanal_drive": q17,
+                    "auditor": aud, 
+                    "obra": obr, 
+                    "epi_visitantes": q1, 
+                    "kit_primeiros_socorros": q2,
+                    "sinalizacao_advertencia": q3, 
+                    "placas_orientacao": q4, 
+                    "areas_vivencia_limpeza": q5,
+                    "canteiro_limpeza": q6, 
+                    "escadas_seguras": q7, 
+                    "barreiras_guarda_corpo": q8,
+                    "protecao_queda_objetos": q9, 
+                    "maquinas_equipamentos": q10, 
+                    "instalacoes_provisorias": q11,
+                    "extintores_norma": q12, 
+                    "escritorio_monitoramento": q13, 
+                    "painel_gestao": q14,
+                    "diario_obra_atualizado": q15, 
+                    "diario_obra_completo": q16, 
+                    "plano_semanal_drive": q17,
                     "observacoes": obs
                 }])
                 df_final = pd.concat([df_old, novo_dado], ignore_index=True)
@@ -832,14 +845,26 @@ else:
     
         def calc_score(df):
             if df.empty: return 0.0
-            cols_meta = ['timestamp', 'auditor', 'obra', 'observacoes', 'fornecedor', 'colaborador_nome', 'cargo', 'atividade_momento', 'local_servico', 'url_imagem_epi', 'quais_epis_uso', 'insumo_especifico', 'nf_numero', 'grupo_insumo', 'dt', 'dt_mes']
-            cols_q = [c for c in df.columns if c in df.columns and c not in cols_meta]
+            cols_meta = [
+                'timestamp', 'auditor', 'obra', 'observacoes', 'fornecedor', 
+                'colaborador_nome', 'cargo', 'atividade_momento', 'local_servico', 
+                'url_imagem_epi', 'quais_epis_uso', 'insumo_especifico', 'nf_numero', 
+                'grupo_insumo', 'dt', 'dt_mes', 'dt_semana'
+            ]
+            
+            cols_q = [c for c in df.columns if c not in cols_meta]
+            
             if not cols_q: return 0.0
+            
             vals = df[cols_q].astype(str).apply(lambda x: x.str.strip().str.lower())
+            
             sim = (vals == 'sim').sum().sum()
-            nao = (vals == 'não').sum().sum() 
-            if (sim + nao) == 0: return 0.0
-            return (sim / (sim + nao)) * 100
+            nao = (vals.isin(['não', 'nao'])).sum().sum()
+            
+            total = sim + nao
+            if total == 0: return 0.0
+            
+            return (sim / total) * 100
     
         scores = {}
         total_audits = 0
