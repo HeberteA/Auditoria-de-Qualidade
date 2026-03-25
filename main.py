@@ -826,8 +826,8 @@ else:
     
     elif escolha == "Dashboards":
         import plotly.express as px
-        import plotly.graph_objects as go
         from datetime import datetime
+        import pandas as pd
     
         st.header("DASHBOARD DE QUALIDADE E SEGURANÇA", divider="orange")
         
@@ -840,12 +840,10 @@ else:
             "Seg. Interno": "auditoria_seg_interno",
             "Qualidade": "auditoria_qualidade"
         }
-    
-        escala_lavie = [[0, "rgb(139, 0, 0)"], [0.5, "rgb(0, 0, 0)"], [1, "rgb(0, 100, 0)"]]
-    
+
         def calc_score(df):
             if df.empty: return 0.0
-            cols_meta = ['timestamp', 'auditor', 'obra', 'observacoes', 'fornecedor', 'colaborador_nome', 'cargo', 'atividade_momento', 'local_servico', 'url_imagem_epi', 'quais_epis_uso', 'insumo_especifico', 'nf_numero', 'grupo_insumo', 'dt', 'dt_mes']
+            cols_meta = ['timestamp', 'auditor', 'obra', 'observacoes', 'fornecedor', 'colaborador_nome', 'cargo', 'atividade_momento', 'local_servico', 'url_imagem_epi', 'quais_epis_uso', 'insumo_especifico', 'nf_numero', 'grupo_insumo', 'dt', 'dt_mes', 'data_limpa', 'dt_obj']
             cols_q = [c for c in df.columns if c not in cols_meta]
             if not cols_q: return 0.0
             
@@ -855,13 +853,7 @@ else:
             
             total = sim + nao
             return (sim / total * 100) if total > 0 else 0.0
-    
-        scores = {}
-        total_audits = 0
-        total_nao_conformidades = 0
-        audits_mes_atual = 0
-        auditor_counts = {}
-        obras_scores = {}
+
         all_data = {}
         meses_disponiveis = set()
         obras_lista = set()
@@ -869,381 +861,122 @@ else:
         for nome, ws in abas_map.items():
             try:
                 data = conn.read(worksheet=ws, ttl=0)
-                if not data.empty:
-                    # CORREÇÃO CRÍTICA: format='mixed' para aceitar horas com e sem segundos
-                    data['dt_obj'] = pd.to_datetime(data['timestamp'], dayfirst=True, errors='coerce', format='mixed')
+                if not data.empty and 'timestamp' in data.columns:
+                    # CORREÇÃO DEFINITIVA DA DATA: Extrair apenas DD/MM/YYYY ignorando horas
+                    data['data_limpa'] = data['timestamp'].astype(str).str.extract(r'(\d{2}/\d{2}/\d{4})')[0]
+                    
+                    # Converter forçando rigorosamente o formato brasileiro
+                    data['dt_obj'] = pd.to_datetime(data['data_limpa'], format='%d/%m/%Y', errors='coerce')
                     data['dt_mes'] = data['dt_obj'].dt.to_period('M').astype(str)
                     
-                    # Remove linhas onde a data falhou (se houver alguma inválida real)
+                    # Filtrar apenas as datas válidas
                     data = data[data['dt_mes'] != 'NaT']
                     
-                    meses_disponiveis.update(data['dt_mes'].dropna().unique())
-                    obras_lista.update(data['obra'].unique())
-                    all_data[nome] = data
-            except: all_data[nome] = pd.DataFrame()
-    
-        avg_score = sum(scores.values()) / len(scores) if scores else 0
-        
-        dfs_para_contagem = [df['obra'] for df in all_data.values() if not df.empty and 'obra' in df.columns]
-        todas_obras_df = pd.concat(dfs_para_contagem) if dfs_para_contagem else pd.Series()
-        obras_unicas = sorted(todas_obras_df.unique()) if not todas_obras_df.empty else []
-        
-        obra_critica = "-"
-        menor_nota = 100.0
-        for ob, notas in obras_scores.items():
-            media_ob = sum(notas)/len(notas) if notas else 0
-            if media_ob < menor_nota:
-                menor_nota = media_ob
-                obra_critica = ob
-    
-        top_auditor = max(auditor_counts, key=auditor_counts.get) if auditor_counts else "-"
-    
-        st.markdown("""
-        <style>
-        .kpi-card {
-            background: linear-gradient(100deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
-            border: 1px solid rgba(227, 112, 38, 0.2);
-            border-radius: 10px;
-            padding: 10px;
-            position: relative;
-            overflow: hidden;
-            transition: transform 0.3s ease, border-color 0.3s ease;
-            height: 140px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-        .kpi-card:hover {
-            border-color: rgba(227, 112, 38, 0.6);
-            transform: translateY(-5px);
-            background: rgba(255, 255, 255, 0.05);
-        }
-        .kpi-card::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            background: #E37026;
-        }
-        .kpi-title {
-            color: #aaa;
-            font-size: 0.75rem;
-            font-weight: 450;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            padding: 5px;
-        }
-        .kpi-value {
-            color: #fff;
-            font-size: 1.8rem;
-            font-weight: 600;
-            margin: 0px 0;
-            padding: 5px;
-        }
-        .kpi-sub {
-            color: rgba(255, 255, 255, 0.4);
-            font-size: 0.75rem;
-            padding: 5px;
-        }
-        .kpi-icon {
-            position: absolute;
-            right: 0px;
-            top: 0px;
-            color: rgba(227, 112, 38, 0.1);
-            font-size: 1rem;
-            font-weight: bold;
-        }
-        </style>
-        """, unsafe_allow_html=True)
-    
-        def card(title, value, sub, icon_char):
-            return f"""
-            <div class="kpi-card">
-                <div class="kpi-icon">{icon_char}</div>
-                <div class="kpi-title">{title}</div>
-                <div class="kpi-value">{value}</div>
-                <div class="kpi-sub">{sub}</div>
-            </div>
-            """
-    
-        c1, c2, c3, c4 = st.columns(4)
-        with c1: st.markdown(card("Total Auditorias", total_audits, "Histórico completo", ""), unsafe_allow_html=True)
-        with c2: st.markdown(card("Conformidade Média", f"{avg_score:.1f}%", "Média global ponderada", ""), unsafe_allow_html=True)
-        with c3: st.markdown(card("Auditorias (Mês)", audits_mes_atual, f"Referente a {datetime.now().strftime('%m/%Y')}", ""), unsafe_allow_html=True)
-        with c4: st.markdown(card("Não Conformidades", total_nao_conformidades, "Itens reprovados (Risco)", ""), unsafe_allow_html=True)
-    
-        st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
-    
-        c5, c6, c7, c8 = st.columns(4)
-        with c5: st.markdown(card("Obras Ativas", len(obras_unicas), "Unidades auditadas", ""), unsafe_allow_html=True)
-        with c6: st.markdown(card("Setores", len([d for d in all_data.values() if not d.empty]), "Áreas monitoradas", ""), unsafe_allow_html=True)
-        with c7: st.markdown(card("Obra em Alerta", obra_critica, f"Menor nota: {menor_nota:.1f}%", ""), unsafe_allow_html=True)
-        with c8: st.markdown(card("Auditor", top_auditor, "Maior volume de registros", ""), unsafe_allow_html=True)
-    
-        st.markdown("---")
-
-        st.subheader("Comparativo Geral: Obras x Setores")
-        
-        dados_agrupados = []
-        for setor, df in all_data.items():
-            if not df.empty and 'obra' in df.columns:
-                for obra_nome in df['obra'].unique():
-                    df_filtered = df[df['obra'] == obra_nome]
-                    score = calc_score(df_filtered)
-                    dados_agrupados.append({
-                        'Obra': obra_nome,
-                        'Setor': setor,
-                        'Conformidade': score
-                    })
-        
-        if dados_agrupados:
-            df_cluster = pd.DataFrame(dados_agrupados).sort_values(by=['Obra', 'Setor'])
-            fig_cluster = px.bar(
-                df_cluster, 
-                x="Obra", 
-                y="Conformidade", 
-                color="Setor", 
-                barmode="group",
-                text_auto='.1f',
-                template="plotly_dark",
-                color_discrete_sequence=px.colors.qualitative.Prism
-            )
-            fig_cluster.update_layout(
-                yaxis_range=[0, 115], 
-                plot_bgcolor='rgba(0,0,0,0)', 
-                paper_bgcolor='rgba(0,0,0,0)',
-                legend_title="Setor",
-                xaxis_title="",
-                yaxis_title="Índice de Conformidade (%)",
-                height=500
-            )
-            fig_cluster.update_traces(textposition='outside')
-            st.plotly_chart(fig_cluster, use_container_width=True)
-        else:
-            st.info("Ainda não há dados suficientes cruzados entre Obras e Setores para gerar este gráfico.")
-
-        st.markdown("---")
-
-        st.subheader("Visão Geral")
-        
-        st.markdown("##### Evolução Mensal de Conformidade")
-        
-        obras_disponiveis = ["Todas"] + list(obras_unicas)
-        obra_filtro_evo = st.selectbox("Filtrar Evolução por Obra", obras_disponiveis, key="filtro_obra_evo")
-        
-        evo_list = []
-        evo_obra_list = []
-        
-        for nome_setor, df_s in all_data.items():
-            if not df_s.empty and 'timestamp' in df_s.columns:
-                temp_dates = pd.to_datetime(df_s['timestamp'], dayfirst=True, errors='coerce')
-                df_valid = df_s[temp_dates.notna()].copy()
-                
-                if not df_valid.empty:
-                    df_valid['dt'] = temp_dates[temp_dates.notna()].dt.to_period('M').astype(str)
-                    
-                    if obra_filtro_evo != "Todas":
-                        df_filtrado_setor = df_valid[df_valid['obra'] == obra_filtro_evo] if 'obra' in df_valid.columns else pd.DataFrame()
-                    else:
-                        df_filtrado_setor = df_valid
-                    
-                    if not df_filtrado_setor.empty:
-                        for mes in sorted(df_filtrado_setor['dt'].unique()):
-                            df_mes = df_filtrado_setor[df_filtrado_setor['dt'] == mes]
-                            score_mes = calc_score(df_mes)
-                            evo_list.append({'Mes': mes, 'Setor': nome_setor, 'Conformidade': score_mes})
-                        
-                        if 'obra' in df_filtrado_setor.columns:
-                            for mes in sorted(df_filtrado_setor['dt'].unique()):
-                                df_mes_geral = df_filtrado_setor[df_filtrado_setor['dt'] == mes]
-                                for ob in df_mes_geral['obra'].unique():
-                                    df_mes_ob = df_mes_geral[df_mes_geral['obra'] == ob]
-                                    if not df_mes_ob.empty:
-                                        score_mes_ob = calc_score(df_mes_ob)
-                                        evo_obra_list.append({'Mes': mes, 'Obra': ob, 'Conformidade': score_mes_ob})
-        
-        st.markdown("<p style='text-align: center; color: #aaa; font-size: 0.9rem;'>Por Setor</p>", unsafe_allow_html=True)
-        if evo_list:
-            df_evo = pd.DataFrame(evo_list).sort_values('Mes')
-            fig_evo = px.line(df_evo, x='Mes', y='Conformidade', color='Setor', markers=True,
-                             template="plotly_dark", color_discrete_sequence=px.colors.qualitative.Prism)
-            fig_evo.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', yaxis_range=[0, 115], margin=dict(t=0))
-            st.plotly_chart(fig_evo, use_container_width=True)
-        else:
-            st.info("Dados insuficientes para gerar evolução temporal por setor.")
-
-        st.markdown("<p style='text-align: center; color: #aaa; font-size: 0.9rem;'>Por Obra (Média de todos os setores na obra)</p>", unsafe_allow_html=True)
-        if evo_obra_list:
-            df_evo_ob = pd.DataFrame(evo_obra_list).groupby(['Mes', 'Obra'])['Conformidade'].mean().reset_index()
-            df_evo_ob = df_evo_ob.sort_values('Mes')
-            fig_evo_ob = px.line(df_evo_ob, x='Mes', y='Conformidade', color='Obra', markers=True,
-                             template="plotly_dark", color_discrete_sequence=px.colors.qualitative.Pastel)
-            fig_evo_ob.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', yaxis_range=[0, 115], margin=dict(t=0))
-            st.plotly_chart(fig_evo_ob, use_container_width=True)
-        else:
-            st.info("Dados insuficientes para gerar evolução temporal por obra.")
-    
-        c1, c2 = st.columns([6, 4])
-        
-        with c1:
-            st.markdown("##### Índice de Conformidade por Setor")
-            df_scores = pd.DataFrame(list(scores.items()), columns=['Setor', 'Conformidade'])
-            fig_bar = px.bar(df_scores, x='Setor', y='Conformidade', text_auto='.1f',
-                            color='Conformidade', color_continuous_scale='RdBu',
-                            template="plotly_dark")
-            fig_bar.update_traces(textposition='outside')
-            fig_bar.update_layout(yaxis_range=[0, 115], plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
-            st.plotly_chart(fig_bar, use_container_width=True)
-    
-        with c2:
-            st.markdown("##### Volume de Auditorias")
-            audit_dist = pd.DataFrame([{'Setor': k, 'Quantidade': len(v)} for k, v in all_data.items() if not v.empty])
-            if not audit_dist.empty:
-                fig_pie = px.pie(audit_dist, names='Setor', values='Quantidade', hole=0.4,
-                                template="plotly_dark", color_discrete_sequence=px.colors.sequential.Oranges_r)
-                fig_pie.update_traces(textinfo='value+percent')
-                fig_pie.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
-                st.plotly_chart(fig_pie, use_container_width=True)
-    
-        st.markdown("---")
-    
-        st.subheader("Análises Específicas")
-        
-        meses_disponiveis = set()
-        for df_s in all_data.values():
-            if not df_s.empty and 'timestamp' in df_s.columns:
-                temp_dates = pd.to_datetime(df_s['timestamp'], dayfirst=True, errors='coerce')
-                df_valid = df_s[temp_dates.notna()].copy()
-                if not df_valid.empty:
-                    df_valid['dt'] = temp_dates[temp_dates.notna()].dt.to_period('M').astype(str)
-                    meses_disponiveis.update(df_valid['dt'].unique())
-        
-        lista_meses = ["Todos"] + sorted(list(meses_disponiveis), reverse=True)
-        mes_filtro_esp = st.selectbox("Filtrar Análises por Mês", lista_meses, key="filtro_mes_esp")
-        
-        tab1, tab2 = st.tabs(["Por Setor", "Por Obra"])
-        
-        with tab1:
-            setor_sel = st.selectbox("Selecione o Setor", list(abas_map.keys()), key="sb_setor")
-            df_setor_bruto = all_data.get(setor_sel, pd.DataFrame())
-            
-            df_setor = pd.DataFrame()
-            if not df_setor_bruto.empty:
-                temp_dates = pd.to_datetime(df_setor_bruto['timestamp'], dayfirst=True, errors='coerce')
-                df_setor_bruto['dt'] = temp_dates.dt.to_period('M').astype(str)
-                if mes_filtro_esp == "Todos":
-                    df_setor = df_setor_bruto
+                    if not data.empty:
+                        meses_disponiveis.update(data['dt_mes'].dropna().unique())
+                        if 'obra' in data.columns:
+                            obras_lista.update(data['obra'].dropna().unique())
+                        all_data[nome] = data
                 else:
-                    df_setor = df_setor_bruto[df_setor_bruto['dt'] == mes_filtro_esp]
+                    all_data[nome] = pd.DataFrame()
+            except Exception as e: 
+                all_data[nome] = pd.DataFrame()
+
+        st.subheader("Evolução Mensal de Conformidade")
+        obra_sel_evo = st.multiselect("Filtrar Obras nos gráficos de evolução", options=sorted(list(obras_lista)), default=None)
+
+        col_ev1, col_ev2 = st.columns(2)
+        
+        with col_ev1:
+            st.markdown("**Progresso por Setor**")
+            evo_setor = []
+            for setor, df in all_data.items():
+                if df.empty: continue
+                df_f = df[df['obra'].isin(obra_sel_evo)] if obra_sel_evo and 'obra' in df.columns else df
+                if not df_f.empty and 'dt_mes' in df_f.columns:
+                    for mes in sorted(df_f['dt_mes'].unique()):
+                        score = calc_score(df_f[df_f['dt_mes'] == mes])
+                        evo_setor.append({"Mês": mes, "Setor": setor, "Conformidade": score})
             
-            if not df_setor.empty:
-                col_d1, col_d2 = st.columns(2)
-                
-                with col_d1:
-                    st.markdown(f"**Conformidade por Obra ({setor_sel})**")
-                    conf_obra = []
-                    if 'obra' in df_setor.columns:
-                        for ob in df_setor['obra'].unique():
-                            val = calc_score(df_setor[df_setor['obra'] == ob])
-                            conf_obra.append({'Obra': ob, 'Conformidade': val})
-                        df_conf_ob = pd.DataFrame(conf_obra)
-                        fig_ob = px.bar(df_conf_ob, x='Obra', y='Conformidade', text_auto='.1f',
-                                       color='Conformidade', color_continuous_scale='RdBu', template="plotly_dark")
-                        fig_ob.update_traces(textposition='outside')
-                        fig_ob.update_layout(yaxis_range=[0, 115], plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
-                        st.plotly_chart(fig_ob, use_container_width=True)
-                
-                with col_d2:
-                    st.markdown(f"**Ranking de Requisitos ({setor_sel})**")
-                    cols_meta = ['timestamp', 'auditor', 'obra', 'observacoes', 'fornecedor', 'colaborador_nome', 'cargo', 'atividade_momento', 'local_servico', 'url_imagem_epi', 'quais_epis_uso', 'insumo_especifico', 'nf_numero', 'grupo_insumo', 'dt']
-                    qs = [c for c in df_setor.columns if c not in cols_meta]
-                    item_scores = []
-                    for q in qs:
-                        s = (df_setor[q].astype(str).str.strip().str.lower() == 'sim').sum()
-                        n = (df_setor[q].astype(str).str.strip().str.lower() == 'não').sum() # <- CORRIGIDO AQUI
-                        if (s + n) > 0:
-                            perc = (s / (s + n) * 100)
-                            q_formatado = q.replace('_', ' ').title()
-                            item_scores.append({'Requisito': q_formatado, 'Conformidade': perc})
-                    
-                    if item_scores:
-                        df_items = pd.DataFrame(item_scores).sort_values('Conformidade', ascending=True)
-                        fig_items = px.bar(df_items, y='Requisito', x='Conformidade', orientation='h', text_auto='.1f',
-                                          color='Conformidade', color_continuous_scale='RdBu', template="plotly_dark")
-                        fig_items.update_traces(textposition='outside')
-                        fig_items.update_layout(xaxis_range=[0, 115], plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', height=400)
-                        st.plotly_chart(fig_items, use_container_width=True)
+            if evo_setor:
+                fig1 = px.line(pd.DataFrame(evo_setor), x="Mês", y="Conformidade", color="Setor", markers=True, template="plotly_dark")
+                st.plotly_chart(fig1, use_container_width=True)
             else:
-                st.warning(f"Sem dados para o setor {setor_sel} no período selecionado.")
+                st.info("Sem dados suficientes.")
+
+        with col_ev2:
+            st.markdown("**Progresso por Obra (Geral)**")
+            evo_obra = []
+            df_total_list = [df for df in all_data.values() if not df.empty]
+            if df_total_list:
+                df_total = pd.concat(df_total_list, ignore_index=True)
+                if not df_total.empty and 'obra' in df_total.columns and 'dt_mes' in df_total.columns:
+                    df_f = df_total[df_total['obra'].isin(obra_sel_evo)] if obra_sel_evo else df_total
+                    for ob in df_f['obra'].dropna().unique():
+                        df_ob = df_f[df_f['obra'] == ob]
+                        for mes in sorted(df_ob['dt_mes'].unique()):
+                            score = calc_score(df_ob[df_ob['dt_mes'] == mes])
+                            evo_obra.append({"Mês": mes, "Obra": ob, "Conformidade": score})
+                    
+                    if evo_obra:
+                        fig2 = px.line(pd.DataFrame(evo_obra), x="Mês", y="Conformidade", color="Obra", markers=True, template="plotly_dark")
+                        st.plotly_chart(fig2, use_container_width=True)
+                    else:
+                        st.info("Sem dados suficientes.")
+
+        st.markdown("---")
+        st.subheader("Análises Detalhadas")
+        lista_meses = ["Todos"] + sorted(list(meses_disponiveis), reverse=True)
+        mes_f = st.selectbox("Filtrar Análises por Mês", lista_meses)
+
+        tab1, tab2 = st.tabs(["Análise por Setor", "Análise por Obra"])
+
+        with tab1:
+            setor_sel = st.selectbox("Escolha o Setor", list(abas_map.keys()))
+            df_s = all_data.get(setor_sel, pd.DataFrame())
+            if not df_s.empty:
+                # Aplica o filtro de mês
+                if mes_f != "Todos" and 'dt_mes' in df_s.columns: 
+                    df_s = df_s[df_s['dt_mes'] == mes_f]
+                
+                if not df_s.empty:
+                    c_d1, c_d2 = st.columns(2)
+                    with c_d1:
+                        st.markdown(f"**Conformidade por Obra - {setor_sel}**")
+                        if 'obra' in df_s.columns:
+                            res_ob = [{"Obra": o, "Nota": calc_score(df_s[df_s['obra']==o])} for o in df_s['obra'].dropna().unique()]
+                            if res_ob:
+                                st.plotly_chart(px.bar(pd.DataFrame(res_ob), x="Obra", y="Nota", text_auto='.1f', template="plotly_dark").update_layout(yaxis_range=[0,115]), use_container_width=True)
+                    with c_d2:
+                        st.markdown("**Itens Críticos (Menor Conformidade)**")
+                        cols_q = [c for c in df_s.columns if c not in cols_meta]
+                        criticos = []
+                        for col in cols_q:
+                            s = (df_s[col].astype(str).str.strip().str.lower() == 'sim').sum()
+                            n = (df_s[col].astype(str).str.strip().str.lower().isin(['não', 'nao'])).sum()
+                            if (s+n) > 0: criticos.append({"Item": col.replace('_',' ').title(), "Nota": (s/(s+n)*100)})
+                        if criticos:
+                            df_crit = pd.DataFrame(criticos).sort_values("Nota").head(10)
+                            st.plotly_chart(px.bar(df_crit, y="Item", x="Nota", orientation='h', template="plotly_dark").update_layout(xaxis_range=[0,115]), use_container_width=True)
+                else:
+                    st.warning(f"Sem dados para {setor_sel} no mês selecionado.")
+            else:
+                st.warning(f"Sem dados registrados para {setor_sel}.")
 
         with tab2:
-            if obras_unicas:
-                obra_sel = st.selectbox("Selecione a Obra", obras_unicas, key="sb_obra")
-                col_e1, col_e2 = st.columns(2)
+            obra_sel = st.selectbox("Escolha a Obra", sorted(list(obras_lista))) if obras_lista else None
+            if obra_sel:
+                df_o_list = []
+                for s, df in all_data.items():
+                    if not df.empty and 'obra' in df.columns:
+                        df_f = df[df['obra'] == obra_sel]
+                        if mes_f != "Todos" and 'dt_mes' in df_f.columns: 
+                            df_f = df_f[df_f['dt_mes'] == mes_f]
+                        if not df_f.empty:
+                            df_o_list.append({"Setor": s, "Nota": calc_score(df_f)})
                 
-                with col_e1:
-                    st.markdown(f"**Conformidade por Setor ({obra_sel})**")
-                    conf_setor_obra = []
-                    for nome_setor, df_s in all_data.items():
-                        if not df_s.empty and 'obra' in df_s.columns and obra_sel in df_s['obra'].values:
-                            df_s_temp = df_s.copy()
-                            temp_dates = pd.to_datetime(df_s_temp['timestamp'], dayfirst=True, errors='coerce')
-                            df_s_temp['dt'] = temp_dates.dt.to_period('M').astype(str)
-                            
-                            if mes_filtro_esp != "Todos":
-                                df_s_temp = df_s_temp[df_s_temp['dt'] == mes_filtro_esp]
-                            
-                            if not df_s_temp.empty:
-                                val = calc_score(df_s_temp[df_s_temp['obra'] == obra_sel])
-                                conf_setor_obra.append({'Setor': nome_setor, 'Conformidade': val})
-                    
-                    df_conf_so = pd.DataFrame(conf_setor_obra)
-                    if not df_conf_so.empty:
-                        fig_so = px.bar(df_conf_so, x='Setor', y='Conformidade', text_auto='.1f',
-                                       color='Conformidade', color_continuous_scale='RdBu', template="plotly_dark")
-                        fig_so.update_traces(textposition='outside')
-                        fig_so.update_layout(yaxis_range=[0, 115], plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
-                        st.plotly_chart(fig_so, use_container_width=True)
-                    else:
-                        st.info("Esta obra não possui registros no período selecionado.")
-        
-                with col_e2:
-                    st.markdown(f"**Ranking Geral de Requisitos - {obra_sel} (Top 15 Críticos)**")
-                    resumo_reqs = []
-                    cols_meta = ['timestamp', 'auditor', 'obra', 'observacoes', 'fornecedor', 'colaborador_nome', 'cargo', 'atividade_momento', 'local_servico', 'url_imagem_epi', 'quais_epis_uso', 'insumo_especifico', 'nf_numero', 'grupo_insumo', 'dt']
-                    
-                    for df_s in all_data.values():
-                        if not df_s.empty and 'obra' in df_s.columns and obra_sel in df_s['obra'].values:
-                            df_s_temp = df_s.copy()
-                            temp_dates = pd.to_datetime(df_s_temp['timestamp'], dayfirst=True, errors='coerce')
-                            df_s_temp['dt'] = temp_dates.dt.to_period('M').astype(str)
-                            
-                            if mes_filtro_esp != "Todos":
-                                df_s_temp = df_s_temp[df_s_temp['dt'] == mes_filtro_esp]
-                                
-                            if not df_s_temp.empty:
-                                df_filtrado = df_s_temp[df_s_temp['obra'] == obra_sel]
-                                qs = [c for c in df_filtrado.columns if c not in cols_meta]
-                                for q in qs:
-                                    s = (df_filtrado[q].astype(str).str.strip().str.lower() == 'sim').sum()
-                                    n = (df_filtrado[q].astype(str).str.strip().str.lower() == 'não').sum() # <- CORRIGIDO AQUI
-                                    if (s + n) > 0:
-                                        q_formatado = q.replace('_', ' ').title()
-                                        resumo_reqs.append({'Requisito': q_formatado, 'Sim': s, 'Nao': n})
-                    
-                    if resumo_reqs:
-                        df_req_obra = pd.DataFrame(resumo_reqs).groupby('Requisito').sum().reset_index()
-                        df_req_obra['Conformidade'] = (df_req_obra['Sim'] / (df_req_obra['Sim'] + df_req_obra['Nao'])) * 100
-                        df_req_obra = df_req_obra.sort_values('Conformidade', ascending=True).head(15)
-                        
-                        fig_req_ob = px.bar(df_req_obra, y='Requisito', x='Conformidade', orientation='h', text_auto='.1f',
-                                           color='Conformidade', color_continuous_scale='RdBu', template="plotly_dark")
-                        fig_req_ob.update_traces(textposition='outside')
-                        fig_req_ob.update_layout(xaxis_range=[0, 115], plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', height=500)
-                        st.plotly_chart(fig_req_ob, use_container_width=True)
-                    else:
-                        st.info("Nenhum requisito avaliado para esta obra no período selecionado.")
-            else:
-                st.warning("Nenhuma obra encontrada.")
+                if df_o_list:
+                    st.markdown(f"**Desempenho por Setor - {obra_sel}**")
+                    st.plotly_chart(px.bar(pd.DataFrame(df_o_list), x="Setor", y="Nota", color="Nota", color_continuous_scale="RdBu", text_auto='.1f', template="plotly_dark").update_layout(yaxis_range=[0,115]), use_container_width=True)
+                else:
+                    st.warning("Sem dados para esta obra no período selecionado.")
