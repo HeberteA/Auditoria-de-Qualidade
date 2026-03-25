@@ -845,7 +845,7 @@ else:
             'timestamp', 'auditor', 'obra', 'observacoes', 'fornecedor', 
             'colaborador_nome', 'cargo', 'atividade_momento', 'local_servico', 
             'url_imagem_epi', 'quais_epis_uso', 'insumo_especifico', 'nf_numero', 
-            'grupo_insumo', 'dt', 'dt_mes', 'dt_obj', 'data_limpa'
+            'grupo_insumo', 'dt', 'dt_mes', 'dt_obj'
         ]
 
         def calc_score(df):
@@ -860,23 +860,25 @@ else:
             total = sim + nao
             return (sim / total * 100) if total > 0 else 0.0
 
-        # FUNÇÃO BLINDADA PARA CONVERTER QUALQUER DATA
-        def parse_data_robusta(d):
-            if pd.isna(d): return pd.NaT
-            if isinstance(d, (pd.Timestamp, datetime)): return pd.Timestamp(d)
-            d_str = str(d).strip()
+        # --- FUNÇÃO INDESTRUTÍVEL DE DATAS ---
+        def parse_data_blindada(s):
+            # Garante que qualquer formato que o Google Sheets entregue (data nativa ou texto) seja lido
+            s_str = s.astype(str).str.strip()
             
-            formatos = [
-                '%d/%m/%Y %H:%M:%S', '%d/%m/%Y %H:%M', '%d/%m/%Y',
-                '%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M', '%Y-%m-%d',
-                '%m/%d/%Y %H:%M:%S', '%m/%d/%Y %H:%M'
-            ]
-            for fmt in formatos:
-                try:
-                    return pd.to_datetime(d_str, format=fmt)
-                except ValueError:
-                    continue
-            return pd.to_datetime(d_str, errors='coerce', dayfirst=True)
+            # Testa as variações possíveis até acertar
+            d1 = pd.to_datetime(s_str, format='%Y-%m-%d %H:%M:%S', errors='coerce')
+            d2 = pd.to_datetime(s_str, format='%Y-%m-%d %H:%M:%S.%f', errors='coerce')
+            d3 = pd.to_datetime(s_str, format='%Y-%m-%d', errors='coerce')
+            d4 = pd.to_datetime(s_str, format='%d/%m/%Y %H:%M:%S', errors='coerce')
+            d5 = pd.to_datetime(s_str, format='%d/%m/%Y %H:%M', errors='coerce')
+            d6 = pd.to_datetime(s_str, format='%d/%m/%Y', errors='coerce')
+            
+            # Combina os acertos
+            res = d1.fillna(d2).fillna(d3).fillna(d4).fillna(d5).fillna(d6)
+            
+            # Se ainda tiver algo estranho, força uma última tentativa brasileira
+            return res.fillna(pd.to_datetime(s_str, dayfirst=True, errors='coerce'))
+        # -------------------------------------
 
         scores = {}
         total_audits = 0
@@ -895,11 +897,14 @@ else:
                 data = conn.read(worksheet=ws, ttl=0)
                 if not data.empty and 'timestamp' in data.columns:
                     
-                    # Aplica a função blindada linha a linha
-                    data['dt_obj'] = data['timestamp'].apply(parse_data_robusta)
+                    # 1. Processa a data bloqueando erros de formato
+                    data['dt_obj'] = parse_data_blindada(data['timestamp'])
                     
-                    data['dt_mes'] = data['dt_obj'].dt.to_period('M').astype(str)
-                    data = data[data['dt_mes'] != 'NaT']
+                    # 2. Formato YYYY-MM para garantir a ordenação correta nos gráficos
+                    data['dt_mes'] = data['dt_obj'].dt.strftime('%Y-%m')
+                    
+                    # 3. Elimina linhas que realmente são lixo (sem data)
+                    data = data[data['dt_mes'].notna()]
 
                     if not data.empty:
                         all_data[nome] = data
