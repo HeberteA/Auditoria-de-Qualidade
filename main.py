@@ -1005,45 +1005,42 @@ else:
         st.markdown("##### Evolução Mensal de Conformidade")
         obra_sel_evo = st.multiselect("Filtrar Obras nos gráficos de evolução", options=obras_unicas, default=None)
 
-        col_ev1, col_ev2 = st.columns(2)
-        with col_ev1:
-            st.markdown("<p style='text-align: center; color: #aaa; font-size: 0.9rem;'>Por Setor</p>", unsafe_allow_html=True)
-            evo_setor = []
-            for setor, df in all_data.items():
-                if df.empty: continue
-                df_f = df[df['obra'].isin(obra_sel_evo)] if obra_sel_evo and 'obra' in df.columns else df
-                if not df_f.empty and 'dt_mes' in df_f.columns:
-                    for mes in sorted(df_f['dt_mes'].unique()):
-                        score = calc_score(df_f[df_f['dt_mes'] == mes])
-                        evo_setor.append({"Mês": mes, "Setor": setor, "Conformidade": score})
-            
-            if evo_setor:
-                fig1 = px.line(pd.DataFrame(evo_setor), x="Mês", y="Conformidade", color="Setor", markers=True, template="plotly_dark")
-                fig1.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', yaxis_range=[0, 115], margin=dict(t=0))
-                st.plotly_chart(fig1, use_container_width=True)
-            else:
-                st.info("Sem dados suficientes.")
+        st.markdown("<p style='text-align: center; color: #aaa; font-size: 0.9rem;'>Por Setor</p>", unsafe_allow_html=True)
+        evo_setor = []
+        for setor, df in all_data.items():
+            if df.empty: continue
+            df_f = df[df['obra'].isin(obra_sel_evo)] if obra_sel_evo and 'obra' in df.columns else df
+            if not df_f.empty and 'dt_mes' in df_f.columns:
+                for mes in sorted(df_f['dt_mes'].unique()):
+                    score = calc_score(df_f[df_f['dt_mes'] == mes])
+                    evo_setor.append({"Mês": mes, "Setor": setor, "Conformidade": score})
+        
+        if evo_setor:
+            fig1 = px.line(pd.DataFrame(evo_setor), x="Mês", y="Conformidade", color="Setor", markers=True, template="plotly_dark")
+            fig1.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', yaxis_range=[0, 115], margin=dict(t=0))
+            st.plotly_chart(fig1, use_container_width=True)
+        else:
+            st.info("Sem dados suficientes.")
 
-        with col_ev2:
-            st.markdown("<p style='text-align: center; color: #aaa; font-size: 0.9rem;'>Por Obra (Média Geral)</p>", unsafe_allow_html=True)
-            evo_obra = []
-            df_total_list = [df for df in all_data.values() if not df.empty]
-            if df_total_list:
-                df_total = pd.concat(df_total_list, ignore_index=True)
-                if not df_total.empty and 'obra' in df_total.columns and 'dt_mes' in df_total.columns:
-                    df_f = df_total[df_total['obra'].isin(obra_sel_evo)] if obra_sel_evo else df_total
-                    for ob in df_f['obra'].dropna().unique():
-                        df_ob = df_f[df_f['obra'] == ob]
-                        for mes in sorted(df_ob['dt_mes'].unique()):
-                            score = calc_score(df_ob[df_ob['dt_mes'] == mes])
-                            evo_obra.append({"Mês": mes, "Obra": ob, "Conformidade": score})
-                    
-                    if evo_obra:
-                        fig2 = px.line(pd.DataFrame(evo_obra), x="Mês", y="Conformidade", color="Obra", markers=True, template="plotly_dark", color_discrete_sequence=px.colors.qualitative.Pastel)
-                        fig2.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', yaxis_range=[0, 115], margin=dict(t=0))
-                        st.plotly_chart(fig2, use_container_width=True)
-                    else:
-                        st.info("Sem dados suficientes.")
+        st.markdown("<p style='text-align: center; color: #aaa; font-size: 0.9rem;'>Por Obra (Média Geral)</p>", unsafe_allow_html=True)
+        evo_obra = []
+        df_total_list = [df for df in all_data.values() if not df.empty]
+        if df_total_list:
+            df_total = pd.concat(df_total_list, ignore_index=True)
+            if not df_total.empty and 'obra' in df_total.columns and 'dt_mes' in df_total.columns:
+                df_f = df_total[df_total['obra'].isin(obra_sel_evo)] if obra_sel_evo else df_total
+                for ob in df_f['obra'].dropna().unique():
+                    df_ob = df_f[df_f['obra'] == ob]
+                    for mes in sorted(df_ob['dt_mes'].unique()):
+                        score = calc_score(df_ob[df_ob['dt_mes'] == mes])
+                        evo_obra.append({"Mês": mes, "Obra": ob, "Conformidade": score})
+                
+                if evo_obra:
+                    fig2 = px.line(pd.DataFrame(evo_obra), x="Mês", y="Conformidade", color="Obra", markers=True, template="plotly_dark", color_discrete_sequence=px.colors.qualitative.Pastel)
+                    fig2.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', yaxis_range=[0, 115], margin=dict(t=0))
+                    st.plotly_chart(fig2, use_container_width=True)
+                else:
+                    st.info("Sem dados suficientes.")
 
         c_vis1, c_vis2 = st.columns([6, 4])
         with c_vis1:
